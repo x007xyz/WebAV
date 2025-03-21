@@ -30,47 +30,27 @@ export function renderCtrls(
 
   observer.observe(cvsEl);
 
+  let lastActSprEvtClear = () => {};
   const { rectEl, ctrlsEl } = createRectAndCtrlEl(container);
   const offSprChange = sprMng.on(ESpriteManagerEvt.ActiveSpriteChange, (s) => {
+    // 每次变更，需要清理上一个事件监听器
+    lastActSprEvtClear();
     if (s == null) {
       rectEl.style.display = 'none';
       return;
     }
     syncCtrlElPos(s, rectEl, ctrlsEl, cvsRatio, rectCtrlsGetter);
+    lastActSprEvtClear = s.on('propsChange', () => {
+      syncCtrlElPos(s, rectEl, ctrlsEl, cvsRatio, rectCtrlsGetter);
+    });
     rectEl.style.display = '';
   });
-
-  let isDown = false;
-  const onDown = (evt: MouseEvent): void => {
-    if (evt.button !== 0) return;
-    isDown = true;
-  };
-  const onWinowUp = (): void => {
-    isDown = false;
-  };
-
-  const onMove = (): void => {
-    if (!isDown || sprMng.activeSprite == null) return;
-    syncCtrlElPos(
-      sprMng.activeSprite,
-      rectEl,
-      ctrlsEl,
-      cvsRatio,
-      rectCtrlsGetter,
-    );
-  };
-
-  cvsEl.addEventListener('pointerdown', onDown);
-  window.addEventListener('pointerup', onWinowUp);
-  window.addEventListener('pointermove', onMove);
 
   return () => {
     observer.disconnect();
     offSprChange();
     rectEl.remove();
-    cvsEl.removeEventListener('pointerdown', onDown);
-    window.removeEventListener('pointerup', onWinowUp);
-    window.removeEventListener('pointermove', onMove);
+    lastActSprEvtClear();
   };
 }
 
