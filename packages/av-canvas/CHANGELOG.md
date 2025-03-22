@@ -1,5 +1,13 @@
 # @webav/av-canvas
 
+## 1.0.20
+
+### Patch Changes
+
+- 8c33b77: fix: ctrls elements not sync #383 #380
+  - @webav/av-cliper@1.0.20
+  - @webav/internal-utils@1.0.20
+
 ## 1.0.19
 
 ### Patch Changes
