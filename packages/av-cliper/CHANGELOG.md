@@ -1,5 +1,15 @@
 # @webav/av-cliper
 
+## 1.1.0
+
+### Minor Changes
+
+- 16be2cf: feat: ImgClip supports the tickInterceptor method
+
+### Patch Changes
+
+- @webav/internal-utils@1.1.0
+
 ## 1.0.20
 
 ### Patch Changes
