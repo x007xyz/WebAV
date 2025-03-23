@@ -119,25 +119,30 @@ export class ImgClip implements IClip {
     Log.info('ImgClip ready:', this.#meta);
   }
 
+  tickInterceptor: <T extends Awaited<ReturnType<ImgClip['tick']>>>(
+    time: number,
+    tickRet: T,
+  ) => Promise<T> = async (_, tickRet) => tickRet;
+
   async tick(time: number): Promise<{
     video: ImageBitmap | VideoFrame;
     state: 'success';
   }> {
     if (this.#img != null) {
-      return {
+      return await this.tickInterceptor(time, {
         video: await createImageBitmap(this.#img),
         state: 'success',
-      };
+      });
     }
     const tt = time % this.#meta.duration;
-    return {
+    return await this.tickInterceptor(time, {
       video: (
         this.#frames.find(
           (f) => tt >= f.timestamp && tt <= f.timestamp + (f.duration ?? 0),
         ) ?? this.#frames[0]
       ).clone(),
       state: 'success',
-    };
+    });
   }
 
   async split(time: number) {

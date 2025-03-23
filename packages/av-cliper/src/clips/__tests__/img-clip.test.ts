@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { ImgClip } from '..';
 
 const animated_gif = `//${location.host}/img/animated.gif`;
@@ -31,4 +31,18 @@ test('clone ImgClip', async () => {
   clip.destroy();
   const { state } = await cloneClip.tick(10e6);
   expect(state).toBe('success');
+});
+
+test('ImgClip tickInterceptor', async () => {
+  const clip = new ImgClip((await fetch(static_jpg)).body!);
+  clip.tickInterceptor = vi.fn();
+  await clip.ready;
+  await clip.tick(10e6);
+  expect(clip.tickInterceptor).toBeCalledWith(
+    10e6,
+    expect.objectContaining({
+      state: 'success',
+      video: expect.any(ImageBitmap),
+    }),
+  );
 });
