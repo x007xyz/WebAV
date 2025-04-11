@@ -32,7 +32,7 @@ export default defineConfig({
     footer: ' ',
     footerConfig: {
       bottom:
-        '<div>碰到问题请去 <a href="https://github.com/WebAV-Tech/WebAV/issues" >WebAV Issues</a> 中反馈</div><div class="flex" style="justify-content: center;"><a href="https://github.com/WebAV-Tech/WebAV"><img src="https://img.shields.io/github/stars/WebAV-Tech/WebAV"></a></div>',
+        '<div>欢迎<a href="https://fenghen.me/posts/2025/04/11/business-cooperation/" style="color: #2196E1; font-weight: 700;" target="_blank">商务合作</a>，碰到问题请去 <a href="https://github.com/WebAV-Tech/WebAV/issues" >WebAV Issues</a> 中反馈</div><div class="flex" style="justify-content: center;"><a href="https://github.com/WebAV-Tech/WebAV"><img src="https://img.shields.io/github/stars/WebAV-Tech/WebAV"></a></div>',
       copyright: ' ',
       columns: [],
     },

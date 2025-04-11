@@ -6,10 +6,12 @@ hero:
   actions:
     - text: 快速开始
       link: './guide'
-    - text: 在线 DEMO
+    - text: 立即体验
       link: './demo/'
     - text: 博客
       link: 'https://hughfenghen.github.io/tag/WebAV/'
+    - text: 商务合作
+      link: 'https://fenghen.me/posts/2025/04/11/business-cooperation/'
 features:
   - title: '跨平台'
     image: 💻

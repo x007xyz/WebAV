@@ -10,6 +10,8 @@ hero:
       link: './en-US/demo/'
     - text: Blog
       link: 'https://hughfenghen.github.io/tag/WebAV/'
+    - text: Partnerships
+      link: 'https://fenghen.me/posts/2025/04/11/business-cooperation/'
 features:
   - title: 'Cross-Platform'
     image: 💻
