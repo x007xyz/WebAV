@@ -6,6 +6,7 @@ import {
   VisibleSprite,
   renderTxt2ImgBitmap,
 } from '@webav/av-cliper';
+import { Button, Radio } from 'antd';
 import {
   Timeline,
   TimelineAction,
@@ -17,14 +18,12 @@ import { assetsPrefix, createFileWriter } from './utils';
 
 type TLActionWithName = TimelineAction & { name: string };
 
-const uhaParam = new URLSearchParams(location.search).get('UHA');
-const __unsafe_hardwareAcceleration__ = [
-  'no-preference',
-  'prefer-hardware',
-  'prefer-software',
-].includes(uhaParam)
-  ? uhaParam
-  : undefined;
+const uhaParam = new URLSearchParams(location.search).get('UHA') ?? '';
+const __unsafe_hardwareAcceleration__ = (
+  ['no-preference', 'prefer-hardware', 'prefer-software'].includes(uhaParam)
+    ? uhaParam
+    : undefined
+) as HardwarePreference | undefined;
 
 const TimelineEditor = ({
   timelineData: tlData,
@@ -53,22 +52,22 @@ const TimelineEditor = ({
   );
   return (
     <div className="">
-      <div>
+      <div className="mb-2">
         <span className="ml-[10px]">缩放：</span>
-        <button
+        <Button
           onClick={() => setScale(scale + 1)}
           className="border rounded-full"
         >
           -
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => setScale(scale - 1 > 1 ? scale - 1 : 1)}
           className="border rounded-full"
         >
           +
-        </button>
+        </Button>
         <span className="mx-[10px]">|</span>
-        <button
+        <Button
           disabled={activeAction == null}
           className="mx-[10px]"
           onClick={() => {
@@ -77,8 +76,8 @@ const TimelineEditor = ({
           }}
         >
           删除
-        </button>
-        <button
+        </Button>
+        <Button
           disabled={activeAction == null}
           className="mx-[10px]"
           onClick={() => {
@@ -87,7 +86,7 @@ const TimelineEditor = ({
           }}
         >
           分割
-        </button>
+        </Button>
       </div>
       <Timeline
         ref={(v) => {
@@ -224,29 +223,18 @@ export default function App() {
 
   return (
     <div className="canvas-wrap">
-      <div ref={(el) => setCvsWrapEl(el)}></div>
-      <input
-        type="radio"
-        id="clip-source-remote"
-        name="clip-source"
-        defaultChecked={clipSource === 'remote'}
-        onChange={() => {
-          setClipSource('remote');
+      <div ref={(el) => setCvsWrapEl(el)} className="mb-2"></div>
+      <Radio.Group
+        onChange={(e) => {
+          setClipSource(e.target.value);
         }}
-      />
-      <label htmlFor="clip-source-remote"> 示例素材</label>
-      <input
-        type="radio"
-        id="clip-source-local"
-        name="clip-source"
-        defaultChecked={clipSource === 'local'}
-        onChange={() => {
-          setClipSource('local');
-        }}
-      />
-      <label htmlFor="clip-source-local"> 本地素材</label>
+        value={clipSource}
+      >
+        <Radio value="remote">示例素材</Radio>
+        <Radio value="local">本地素材</Radio>
+      </Radio.Group>
       <span className="mx-[10px]">|</span>
-      <button
+      <Button
         className="mx-[10px]"
         onClick={async () => {
           const stream =
@@ -263,8 +251,8 @@ export default function App() {
         }}
       >
         + 视频
-      </button>
-      <button
+      </Button>
+      <Button
         className="mx-[10px]"
         onClick={async () => {
           const stream =
@@ -277,8 +265,8 @@ export default function App() {
         }}
       >
         + 音频
-      </button>
-      <button
+      </Button>
+      <Button
         className="mx-[10px]"
         onClick={async () => {
           let args;
@@ -295,14 +283,15 @@ export default function App() {
           } else {
             args = (await fetch(clipsSrc[2])).body!;
           }
+          // @ts-ignore
           const spr = new VisibleSprite(new ImgClip(args));
           await avCvs?.addSprite(spr);
           addSprite2Track('3-img', spr, '图片');
         }}
       >
         + 图片
-      </button>
-      <button
+      </Button>
+      <Button
         className="mx-[10px]"
         onClick={async () => {
           const spr = new VisibleSprite(
@@ -318,9 +307,9 @@ export default function App() {
         }}
       >
         + 文字
-      </button>
+      </Button>
       <span className="mx-[10px]">|</span>
-      <button
+      <Button
         className="mx-[10px]"
         onClick={async () => {
           if (avCvs == null || tlState.current == null) return;
@@ -332,8 +321,8 @@ export default function App() {
         }}
       >
         {playing ? '暂停' : '播放'}
-      </button>
-      <button
+      </Button>
+      <Button
         className="mx-[10px]"
         onClick={async () => {
           if (avCvs == null) return;
@@ -343,8 +332,8 @@ export default function App() {
         }}
       >
         导出视频
-      </button>
-      <p></p>
+      </Button>
+      <hr className="m-2" />
       <TimelineEditor
         timelineData={tlData}
         timelineState={tlState}
@@ -381,7 +370,7 @@ export default function App() {
           if (avCvs == null || spr == null || tlState.current == null) return;
           const newClips = await spr
             .getClip()
-            .split(tlState.current.getTime() * 1e6 - spr.time.offset);
+            .split?.(tlState.current.getTime() * 1e6 - spr.time.offset)!;
           // 移除原有对象
           avCvs.removeSprite(spr);
           actionSpriteMap.delete(action);
