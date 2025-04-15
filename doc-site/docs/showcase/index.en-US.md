@@ -12,5 +12,5 @@ sidebar: false
 import ShowcaseCards from './ShowcaseCards.tsx';
 import data from './data.en-US.ts';
 
-export default () => <ShowcaseCards cases={data} />;
+export default () => <ShowcaseCards data={data} />;
 ```
