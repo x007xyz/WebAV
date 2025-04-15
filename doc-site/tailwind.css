@@ -1,3 +1,15 @@
+/* base 会覆盖所有 md 样式，所以禁用 */
 /* @tailwind base; */
 @tailwind components;
 @tailwind utilities;
+
+/* 声明 base 定义的某些 css 变量，避免某些 tw 动画失效 */
+:root {
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+}

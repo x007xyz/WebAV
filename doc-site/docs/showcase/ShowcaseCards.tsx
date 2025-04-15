@@ -9,13 +9,13 @@ const Card: React.FC<CardProps> = ({ name, cover, description, link }) => {
   return (
     <div className="w-72 rounded-lg shadow-md bg-white dark:bg-slate-700 hover:scale-105 transition-transform duration-300">
       <a href={link} target="_blank" rel="noopener noreferrer">
-        <img src={cover} className="w-full h-44 object-cover" />
+        <img src={cover} className="h-44 w-full object-cover block" />
       </a>
-      <div className="h-32 p-4 flex flex-col">
-        <p className="text-xl font-semibold dark:text-blue-200">{name}</p>
-        <p className="mt-1 text-gray-600 dark:text-white line-clamp-3">
+      <div className="h-24 p-4 flex flex-col">
+        <div className="text-xl font-semibold dark:text-blue-200">{name}</div>
+        <div className="mt-1 text-gray-600 dark:text-white line-clamp-3">
           {description}
-        </p>
+        </div>
       </div>
     </div>
   );
