@@ -71,7 +71,9 @@ export class VisibleSprite extends BaseSprite {
    * 提前准备指定 time 的帧
    */
   preFrame(time: number) {
+    if (this.#lastTime === time) return;
     this.#update(time);
+    this.#lastTime = time;
   }
 
   #lastTime = -1;

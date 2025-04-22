@@ -29,12 +29,10 @@ export class SpriteManager {
 
   async addSprite(vs: VisibleSprite): Promise<void> {
     await vs.ready;
-    vs.preFrame(0);
     this.#sprites.push(vs);
     this.#sprites = this.#sprites.sort((a, b) => a.zIndex - b.zIndex);
     vs.on('propsChange', (props) => {
       if (props.zIndex == null) return;
-      vs.preFrame(0);
       this.#sprites = this.#sprites.sort((a, b) => a.zIndex - b.zIndex);
     });
 
