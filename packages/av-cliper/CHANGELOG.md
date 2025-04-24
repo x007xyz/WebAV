@@ -1,5 +1,11 @@
 # @webav/av-cliper
 
+## 1.1.1
+
+### Patch Changes
+
+- @webav/internal-utils@1.1.1
+
 ## 1.1.0
 
 ### Minor Changes

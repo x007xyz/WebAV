@@ -1,5 +1,13 @@
 # @webav/av-canvas
 
+## 1.1.1
+
+### Patch Changes
+
+- a61ef88: fix: stuttering when start playing with large videos
+  - @webav/av-cliper@1.1.1
+  - @webav/internal-utils@1.1.1
+
 ## 1.1.0
 
 ### Patch Changes
