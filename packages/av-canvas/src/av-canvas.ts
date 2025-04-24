@@ -340,6 +340,7 @@ export class AVCanvas {
       this.#sprMapAudioNode.set(vs, audioNode);
     }
     await this.#spriteManager.addSprite(vs);
+    vs.preFrame(0);
   };
   /**
    * 删除 {@link VisibleSprite}
