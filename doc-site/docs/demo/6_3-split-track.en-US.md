@@ -7,7 +7,7 @@ group:
 order: 3
 ---
 
-# Orbit Separation
+# Track Separation
 
 Audio and video track separation is a basic ability of editing. After separation, audio and video tracks can be edited separately without affecting each other.
 
