@@ -1,5 +1,17 @@
 # @webav/av-recorder
 
+## 1.2.0
+
+### Minor Changes
+
+- bug修复
+
+### Patch Changes
+
+- Updated dependencies
+  - @fly-cut/internal-utils@1.2.0
+  - @fly-cut/av-cliper@1.2.0
+
 ## 1.1.1
 
 ### Patch Changes

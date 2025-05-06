@@ -1,5 +1,11 @@
 # @webav/internal-utils
 
+## 1.2.0
+
+### Minor Changes
+
+- bug修复
+
 ## 1.1.1
 
 ## 1.1.0

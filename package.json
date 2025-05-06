@@ -49,5 +49,6 @@
     "*.{json,ts,tsx,js,md}": [
       "npx prettier --write"
     ]
-  }
+  },
+  "version": "0.0.1"
 }
