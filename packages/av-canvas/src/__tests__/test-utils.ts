@@ -1,4 +1,4 @@
-import { AudioClip, VisibleSprite } from '@webav/av-cliper';
+import { AudioClip, VisibleSprite } from '@fly-cut/av-cliper';
 import { vi } from 'vitest';
 
 /**

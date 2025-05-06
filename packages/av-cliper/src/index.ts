@@ -16,4 +16,4 @@ export { Rect } from './sprite/rect';
 export { Combinator } from './combinator';
 export type { ICombinatorOpts } from './combinator';
 
-export { Log } from '@webav/internal-utils';
+export { Log } from '@fly-cut/internal-utils';

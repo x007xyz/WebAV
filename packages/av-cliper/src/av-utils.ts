@@ -1,6 +1,6 @@
 // 能同时在 worker 和主线程中运行的工具函数
 
-import { workerTimer } from '@webav/internal-utils';
+import { workerTimer } from '@fly-cut/internal-utils';
 import * as waveResampler from 'wave-resampler';
 
 /**

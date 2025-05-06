@@ -1,5 +1,5 @@
 {
-  "name": "@webav/av-canvas",
+  "name": "@fly-cut/av-canvas",
   "version": "1.1.1",
   "private": false,
   "repository": "https://github.com/WebAV-Tech/WebAV",
@@ -43,7 +43,7 @@
   "devDependencies": {
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
-    "@webav/av-recorder": "workspace:*",
+    "@fly-cut/av-recorder": "workspace:*",
     "@xzdarcy/react-timeline-editor": "^0.1.9",
     "autoprefixer": "^10.4.19",
     "esbuild-plugin-react-virtualized": "^1.0.4",
@@ -53,7 +53,7 @@
     "tailwindcss": "^3.4.3"
   },
   "dependencies": {
-    "@webav/av-cliper": "workspace:*",
-    "@webav/internal-utils": "workspace:*"
+    "@fly-cut/av-cliper": "workspace:*",
+    "@fly-cut/internal-utils": "workspace:*"
   }
 }

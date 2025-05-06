@@ -4,7 +4,7 @@ import {
   autoReadStream,
   EventTool,
   file2stream,
-} from '@webav/internal-utils';
+} from '@fly-cut/internal-utils';
 import {
   AVRecorderConf,
   IStream,

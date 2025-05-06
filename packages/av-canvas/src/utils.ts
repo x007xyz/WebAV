@@ -1,4 +1,4 @@
-import { Rect } from '@webav/av-cliper';
+import { Rect } from '@fly-cut/av-cliper';
 import { RectCtrls } from './types';
 
 export function createEl(tagName: string): HTMLElement {

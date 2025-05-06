@@ -1,6 +1,6 @@
 import { ESpriteManagerEvt, SpriteManager } from './sprite-manager';
 import { ICvsRatio, IPoint, RectCtrls, TCtrlKey } from '../types';
-import { VisibleSprite, Rect } from '@webav/av-cliper';
+import { VisibleSprite, Rect } from '@fly-cut/av-cliper';
 import { createEl } from '../utils';
 
 /**

@@ -5,7 +5,7 @@ import {
   VisibleSprite,
   MediaStreamClip,
   ICombinatorOpts,
-} from '@webav/av-cliper';
+} from '@fly-cut/av-cliper';
 import { renderCtrls } from './sprites/render-ctrl';
 import { ESpriteManagerEvt, SpriteManager } from './sprites/sprite-manager';
 import {
@@ -15,7 +15,7 @@ import {
 } from './sprites/sprite-op';
 import { IResolution } from './types';
 import { createCtrlsGetter, createEl } from './utils';
-import { workerTimer, EventTool } from '@webav/internal-utils';
+import { workerTimer, EventTool } from '@fly-cut/internal-utils';
 
 /**
  * 默认的音频设置，⚠️ 不要变更它的值 ⚠️

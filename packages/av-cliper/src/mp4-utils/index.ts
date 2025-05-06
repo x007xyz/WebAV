@@ -4,7 +4,7 @@ import mp4box, {
   SampleOpts,
   TrakBoxParser,
 } from '@webav/mp4box.js';
-import { autoReadStream, file2stream, Log } from '@webav/internal-utils';
+import { autoReadStream, file2stream, Log } from '@fly-cut/internal-utils';
 import {
   extractPCM4AudioData,
   extractPCM4AudioBuffer,

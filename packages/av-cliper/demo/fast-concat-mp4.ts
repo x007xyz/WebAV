@@ -1,4 +1,4 @@
-import { Log } from '@webav/internal-utils';
+import { Log } from '@fly-cut/internal-utils';
 import { fastConcatMP4, mixinMP4AndAudio } from '../src/mp4-utils';
 import { playOutputStream } from './play-video';
 

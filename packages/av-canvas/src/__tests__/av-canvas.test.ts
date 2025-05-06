@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { AVCanvas } from '../av-canvas';
 import { createCtrlsGetter, createEl } from '../utils';
 import { crtMSEvt4Offset } from './test-utils';
-import { IClip, VisibleSprite } from '@webav/av-cliper';
+import { IClip, VisibleSprite } from '@fly-cut/av-cliper';
 
 let container: HTMLDivElement;
 let avCvs: AVCanvas;

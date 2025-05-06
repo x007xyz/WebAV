@@ -1,4 +1,9 @@
-import { Log, EventTool, file2stream, recodemux } from '@webav/internal-utils';
+import {
+  Log,
+  EventTool,
+  file2stream,
+  recodemux,
+} from '@fly-cut/internal-utils';
 import { OffscreenSprite } from './sprite/offscreen-sprite';
 import { sleep } from './av-utils';
 import { DEFAULT_AUDIO_CONF } from './clips';

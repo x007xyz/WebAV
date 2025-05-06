@@ -1,4 +1,4 @@
-import { Log } from '@webav/internal-utils';
+import { Log } from '@fly-cut/internal-utils';
 import { IClip } from './iclip';
 
 interface IEmbedSubtitlesOpts {

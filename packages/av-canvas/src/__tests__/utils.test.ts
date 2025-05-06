@@ -1,4 +1,4 @@
-import { Rect } from '@webav/av-cliper';
+import { Rect } from '@fly-cut/av-cliper';
 import { afterAll, beforeAll, expect, test } from 'vitest';
 import { createCtrlsGetter } from '../utils';
 

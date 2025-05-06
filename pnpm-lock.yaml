@@ -71,13 +71,13 @@ importers:
 
   doc-site:
     dependencies:
-      '@webav/av-canvas':
+      '@fly-cut/av-canvas':
         specifier: workspace:*
         version: link:../packages/av-canvas
-      '@webav/av-cliper':
+      '@fly-cut/av-cliper':
         specifier: workspace:*
         version: link:../packages/av-cliper
-      '@webav/av-recorder':
+      '@fly-cut/av-recorder':
         specifier: workspace:*
         version: link:../packages/av-recorder
       '@xzdarcy/react-timeline-editor':
@@ -123,22 +123,22 @@ importers:
 
   packages/av-canvas:
     dependencies:
-      '@webav/av-cliper':
+      '@fly-cut/av-cliper':
         specifier: workspace:*
         version: link:../av-cliper
-      '@webav/internal-utils':
+      '@fly-cut/internal-utils':
         specifier: workspace:*
         version: link:../internal-utils
     devDependencies:
+      '@fly-cut/av-recorder':
+        specifier: workspace:*
+        version: link:../av-recorder
       '@types/react':
         specifier: ^18.3.1
         version: 18.3.3
       '@types/react-dom':
         specifier: ^18.3.0
         version: 18.3.0
-      '@webav/av-recorder':
-        specifier: workspace:*
-        version: link:../av-recorder
       '@xzdarcy/react-timeline-editor':
         specifier: ^0.1.9
         version: 0.1.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -159,11 +159,11 @@ importers:
         version: 18.3.1(react@18.3.1)
       tailwindcss:
         specifier: ^3.4.3
-        version: 3.4.4(ts-node@10.9.2(@types/node@22.10.7)(typescript@5.5.2))
+        version: 3.4.4(ts-node@10.9.2(@swc/core@1.4.2(@swc/helpers@0.5.1))(@types/node@22.10.7)(typescript@5.5.2))
 
   packages/av-cliper:
     dependencies:
-      '@webav/internal-utils':
+      '@fly-cut/internal-utils':
         specifier: workspace:*
         version: link:../internal-utils
       '@webav/mp4box.js':
@@ -178,10 +178,10 @@ importers:
 
   packages/av-recorder:
     dependencies:
-      '@webav/av-cliper':
+      '@fly-cut/av-cliper':
         specifier: workspace:*
         version: link:../av-cliper
-      '@webav/internal-utils':
+      '@fly-cut/internal-utils':
         specifier: workspace:*
         version: link:../internal-utils
     devDependencies:
@@ -18782,13 +18782,13 @@ snapshots:
       postcss: 8.4.38
       ts-node: 10.9.2(@swc/core@1.4.2(@swc/helpers@0.5.1))(@types/node@22.7.6)(typescript@5.5.2)
 
-  postcss-load-config@4.0.2(postcss@8.4.38)(ts-node@10.9.2(@types/node@22.10.7)(typescript@5.5.2)):
+  postcss-load-config@4.0.2(postcss@8.4.38)(ts-node@10.9.2(@swc/core@1.4.2(@swc/helpers@0.5.1))(@types/node@22.10.7)(typescript@5.5.2)):
     dependencies:
       lilconfig: 3.1.2
       yaml: 2.4.5
     optionalDependencies:
       postcss: 8.4.38
-      ts-node: 10.9.2(@types/node@22.10.7)(typescript@5.5.2)
+      ts-node: 10.9.2(@swc/core@1.4.2(@swc/helpers@0.5.1))(@types/node@22.10.7)(typescript@5.5.2)
 
   postcss-logical@5.0.4(postcss@8.4.38):
     dependencies:
@@ -20882,7 +20882,7 @@ snapshots:
     transitivePeerDependencies:
       - ts-node
 
-  tailwindcss@3.4.4(ts-node@10.9.2(@types/node@22.10.7)(typescript@5.5.2)):
+  tailwindcss@3.4.4(ts-node@10.9.2(@swc/core@1.4.2(@swc/helpers@0.5.1))(@types/node@22.10.7)(typescript@5.5.2)):
     dependencies:
       '@alloc/quick-lru': 5.2.0
       arg: 5.0.2
@@ -20901,7 +20901,7 @@ snapshots:
       postcss: 8.4.38
       postcss-import: 15.1.0(postcss@8.4.38)
       postcss-js: 4.0.1(postcss@8.4.38)
-      postcss-load-config: 4.0.2(postcss@8.4.38)(ts-node@10.9.2(@types/node@22.10.7)(typescript@5.5.2))
+      postcss-load-config: 4.0.2(postcss@8.4.38)(ts-node@10.9.2(@swc/core@1.4.2(@swc/helpers@0.5.1))(@types/node@22.10.7)(typescript@5.5.2))
       postcss-nested: 6.0.1(postcss@8.4.38)
       postcss-selector-parser: 6.1.0
       resolve: 1.22.8
@@ -21104,6 +21104,27 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
+  ts-node@10.9.2(@swc/core@1.4.2(@swc/helpers@0.5.1))(@types/node@22.10.7)(typescript@5.5.2):
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.11
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.4
+      '@types/node': 22.10.7
+      acorn: 8.12.0
+      acorn-walk: 8.3.3
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.2
+      make-error: 1.3.6
+      typescript: 5.5.2
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    optionalDependencies:
+      '@swc/core': 1.4.2(@swc/helpers@0.5.1)
+    optional: true
+
   ts-node@10.9.2(@swc/core@1.4.2(@swc/helpers@0.5.1))(@types/node@22.7.6)(typescript@5.5.2):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
@@ -21123,25 +21144,6 @@ snapshots:
       yn: 3.1.1
     optionalDependencies:
       '@swc/core': 1.4.2(@swc/helpers@0.5.1)
-
-  ts-node@10.9.2(@types/node@22.10.7)(typescript@5.5.2):
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      '@tsconfig/node10': 1.0.11
-      '@tsconfig/node12': 1.0.11
-      '@tsconfig/node14': 1.0.3
-      '@tsconfig/node16': 1.0.4
-      '@types/node': 22.10.7
-      acorn: 8.12.0
-      acorn-walk: 8.3.3
-      arg: 4.1.3
-      create-require: 1.1.1
-      diff: 4.0.2
-      make-error: 1.3.6
-      typescript: 5.5.2
-      v8-compile-cache-lib: 3.0.1
-      yn: 3.1.1
-    optional: true
 
   ts-toolbelt@9.6.0: {}
 

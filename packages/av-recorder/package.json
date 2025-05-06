@@ -1,5 +1,5 @@
 {
-  "name": "@webav/av-recorder",
+  "name": "@fly-cut/av-recorder",
   "version": "1.1.1",
   "private": false,
   "repository": "https://github.com/WebAV-Tech/WebAV",
@@ -42,7 +42,7 @@
     "@typescript/lib-dom": "npm:@types/web"
   },
   "dependencies": {
-    "@webav/av-cliper": "workspace:*",
-    "@webav/internal-utils": "workspace:*"
+    "@fly-cut/av-cliper": "workspace:*",
+    "@fly-cut/internal-utils": "workspace:*"
   }
 }

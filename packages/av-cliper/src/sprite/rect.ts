@@ -1,4 +1,4 @@
-import { EventTool } from '@webav/internal-utils';
+import { EventTool } from '@fly-cut/internal-utils';
 
 interface IPoint {
   x: number;

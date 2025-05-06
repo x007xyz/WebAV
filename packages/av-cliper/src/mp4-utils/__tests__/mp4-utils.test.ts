@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import mp4box from '@webav/mp4box.js';
-import { autoReadStream, file2stream } from '@webav/internal-utils';
+import { autoReadStream, file2stream } from '@fly-cut/internal-utils';
 import { file, write } from 'opfs-tools';
 import { quickParseMP4File } from '../mp4box-utils';
 

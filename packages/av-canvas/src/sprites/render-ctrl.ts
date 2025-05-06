@@ -1,6 +1,6 @@
 import { CTRL_KEYS, ICvsRatio, RectCtrls, TCtrlKey } from '../types';
 import { createEl } from '../utils';
-import { VisibleSprite, Rect } from '@webav/av-cliper';
+import { VisibleSprite, Rect } from '@fly-cut/av-cliper';
 import { ESpriteManagerEvt, SpriteManager } from './sprite-manager';
 
 export function renderCtrls(

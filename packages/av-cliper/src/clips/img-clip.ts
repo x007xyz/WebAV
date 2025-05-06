@@ -1,5 +1,5 @@
 import { decodeImg } from '../av-utils';
-import { Log } from '@webav/internal-utils';
+import { Log } from '@fly-cut/internal-utils';
 import { IClip } from './iclip';
 
 type AnimateImgType = 'avif' | 'webp' | 'png' | 'gif';
