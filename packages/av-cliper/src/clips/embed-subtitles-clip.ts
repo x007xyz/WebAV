@@ -1,3 +1,4 @@
+import { Log } from '@webav/internal-utils';
 import { IClip } from './iclip';
 
 interface IEmbedSubtitlesOpts {
@@ -126,6 +127,7 @@ export class EmbedSubtitlesClip implements IClip {
   }
 
   #renderTxt(txt: string) {
+    Log.info('renderTxt', txt);
     const lines = txt
       .split('\n')
       .reverse()
@@ -292,6 +294,41 @@ export class EmbedSubtitlesClip implements IClip {
    */
   async clone() {
     return new EmbedSubtitlesClip(this.#subtitles.slice(0), this.#opts) as this;
+  }
+
+  /**
+   * 通过时间戳，修改字幕内容
+   * @param subtitle SubtitleStruct
+   * @returns
+   */
+  updateSubtitle(subtitle: SubtitleStruct) {
+    this.#subtitles.forEach((s) => {
+      if (s.start === subtitle.start && s.end === subtitle.end) {
+        s.text = subtitle.text;
+      }
+    });
+  }
+
+  /**
+   * 获取字幕距离底部的偏移距离
+   * @returns 当前的bottomOffset值（像素）
+   */
+  getBottomOffset(): number {
+    return this.#opts.bottomOffset;
+  }
+
+  /**
+   * 设置字幕距离底部的偏移距离
+   * @param value 新的bottomOffset值（像素）
+   */
+  setBottomOffset(value: number): void {
+    if (typeof value !== 'number' || value < 0) {
+      throw new Error('bottomOffset must be a non-negative number');
+    }
+    this.#opts.bottomOffset = value;
+    // 清除上一帧缓存，确保下次tick时使用新的bottomOffset
+    this.#lastVF?.close();
+    this.#lastVF = null;
   }
 
   /**

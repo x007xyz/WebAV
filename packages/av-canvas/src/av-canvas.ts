@@ -87,6 +87,20 @@ export class AVCanvas {
 
   #opts;
 
+  #backgroundOptions: {
+    mode: 'cover' | 'contain' | 'stretch' | 'repeat';
+    opacity: number;
+    blur: number;
+  } = {
+    mode: 'cover',
+    opacity: 1,
+    blur: 0,
+  };
+
+  // 在 AVCanvas 类中添加
+  #backgroundImage: ImageBitmap | null = null;
+  #originalBackgroundImage: ImageBitmap | null = null;
+
   /**
    * 创建 `AVCanvas` 类的实例。
    * @param attchEl - 要添加画布的元素。
@@ -158,6 +172,61 @@ export class AVCanvas {
       runCnt += 1;
       this.#cvsCtx.fillStyle = opts.bgColor;
       this.#cvsCtx.fillRect(0, 0, this.#cvsEl.width, this.#cvsEl.height);
+
+      // 如果有背景图片，绘制背景图片
+      if (this.#backgroundImage) {
+        const { width, height } = this.#cvsEl;
+        const { mode, opacity } = this.#backgroundOptions;
+
+        // 保存当前上下文状态
+        this.#cvsCtx.save();
+
+        // 设置透明度
+        if (opacity !== 1) {
+          this.#cvsCtx.globalAlpha = opacity;
+        }
+
+        // 根据不同模式绘制背景
+        switch (mode) {
+          case 'cover':
+            // 覆盖模式，保持宽高比填满整个画布
+            drawImageCover(
+              this.#cvsCtx,
+              this.#backgroundImage,
+              0,
+              0,
+              width,
+              height,
+            );
+            break;
+          case 'contain':
+            // 包含模式，保持宽高比完整显示图片
+            drawImageContain(
+              this.#cvsCtx,
+              this.#backgroundImage,
+              0,
+              0,
+              width,
+              height,
+            );
+            break;
+          case 'stretch':
+            // 拉伸模式，拉伸填满整个画布
+            this.#cvsCtx.drawImage(this.#backgroundImage, 0, 0, width, height);
+            break;
+          case 'repeat':
+            // 重复模式，平铺填满整个画布
+            const pattern = this.#cvsCtx.createPattern(
+              this.#backgroundImage,
+              'repeat',
+            );
+            if (pattern) {
+              this.#cvsCtx.fillStyle = pattern;
+              this.#cvsCtx.fillRect(0, 0, width, height);
+            }
+            break;
+        }
+      }
       this.#render();
 
       if (lastRenderTime !== this.#renderTime) {
@@ -424,6 +493,129 @@ export class AVCanvas {
     }
     return com;
   }
+
+  /**
+   * 设置背景图片
+   * @param image 背景图片（ImageBitmap、HTMLImageElement 或 URL）
+   * @param options 可选配置（如拉伸模式、透明度等）
+   */
+  async setBackgroundImage(
+    image: ImageBitmap | HTMLImageElement | string,
+    options: {
+      mode?: 'cover' | 'contain' | 'stretch' | 'repeat';
+      opacity?: number;
+      blur?: number;
+    } = {},
+  ): Promise<void> {
+    // 如果传入的是 URL 字符串，先加载图片
+    let originalImage: ImageBitmap;
+    if (typeof image === 'string') {
+      const response = await fetch(image);
+      const blob = await response.blob();
+      originalImage = await createImageBitmap(blob);
+    } else if (image instanceof HTMLImageElement) {
+      // 如果是 HTMLImageElement，转换为 ImageBitmap
+      originalImage = await createImageBitmap(image);
+    } else {
+      originalImage = image;
+    }
+
+    // 保存原始图像用于重新处理
+    this.#originalBackgroundImage = originalImage;
+
+    // 保存选项
+    this.#backgroundOptions = {
+      mode: options.mode || 'cover',
+      opacity: options.opacity !== undefined ? options.opacity : 1,
+      blur: options.blur !== undefined ? options.blur : 0,
+    };
+
+    // 如果需要模糊效果，预先处理图像
+    if (this.#backgroundOptions.blur > 0) {
+      // 创建离屏 Canvas 来应用模糊效果
+      const offscreenCanvas = new OffscreenCanvas(
+        originalImage.width,
+        originalImage.height,
+      );
+      const offscreenCtx = offscreenCanvas.getContext('2d');
+
+      if (offscreenCtx) {
+        // 应用模糊效果
+        offscreenCtx.filter = `blur(${this.#backgroundOptions.blur}px)`;
+
+        // 绘制图像
+        offscreenCtx.drawImage(originalImage, 0, 0);
+
+        // 创建处理后的 ImageBitmap
+        this.#backgroundImage = await createImageBitmap(offscreenCanvas);
+      } else {
+        // 如果无法创建上下文，使用原始图像
+        this.#backgroundImage = originalImage;
+      }
+    } else {
+      // 不需要模糊效果，直接使用原始图像
+      this.#backgroundImage = originalImage;
+    }
+  }
+
+  /**
+   * 更新背景图片的模糊效果或透明度
+   * @param options 可选配置（模式、透明度、模糊度）
+   */
+  async updateBackgroundOptions(
+    options: {
+      mode?: 'cover' | 'contain' | 'stretch' | 'repeat';
+      opacity?: number;
+      blur?: number;
+    } = {},
+  ): Promise<void> {
+    if (!this.#originalBackgroundImage) return;
+
+    // 更新选项
+    if (options.mode !== undefined) {
+      this.#backgroundOptions.mode = options.mode;
+    }
+    if (options.opacity !== undefined) {
+      this.#backgroundOptions.opacity = options.opacity;
+    }
+    if (options.blur !== undefined) {
+      this.#backgroundOptions.blur = options.blur;
+    }
+
+    // 如果模糊度发生变化，重新处理图像
+    if (options.blur !== undefined) {
+      if (this.#backgroundOptions.blur > 0) {
+        // 创建离屏 Canvas 来应用模糊效果
+        const offscreenCanvas = new OffscreenCanvas(
+          this.#originalBackgroundImage.width,
+          this.#originalBackgroundImage.height,
+        );
+        const offscreenCtx = offscreenCanvas.getContext('2d');
+
+        if (offscreenCtx) {
+          // 应用模糊效果
+          offscreenCtx.filter = `blur(${this.#backgroundOptions.blur}px)`;
+
+          // 绘制图像
+          offscreenCtx.drawImage(this.#originalBackgroundImage, 0, 0);
+
+          // 创建处理后的 ImageBitmap
+          this.#backgroundImage = await createImageBitmap(offscreenCanvas);
+        }
+      } else {
+        // 不需要模糊效果，直接使用原始图像
+        this.#backgroundImage = this.#originalBackgroundImage;
+      }
+    }
+  }
+
+  /**
+   * 清除背景图片，恢复使用纯色背景
+   */
+  clearBackgroundImage(): void {
+    this.#backgroundImage = null;
+    this.#originalBackgroundImage = null;
+  }
 }
 
 function convertPCM2AudioSource(pcmData: Float32Array[][], ctx: AudioContext) {
@@ -461,4 +653,72 @@ function createEmptyOscillatorNode(ctx: AudioContext) {
   osc.setPeriodicWave(wave);
   osc.start();
   return osc;
+}
+
+/**
+ * 绘制图片并保持宽高比填满整个目标区域（类似CSS的background-size: cover）
+ * 图片可能会被裁剪，但不会变形
+ */
+function drawImageCover(
+  ctx: CanvasRenderingContext2D,
+  img: ImageBitmap,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): void {
+  const imgRatio = img.width / img.height;
+  const targetRatio = width / height;
+
+  let drawWidth = width;
+  let drawHeight = height;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  // 计算绘制尺寸和偏移量，保持宽高比
+  if (targetRatio > imgRatio) {
+    // 目标区域更宽，需要裁剪高度
+    drawHeight = (width / img.width) * img.height;
+    offsetY = (height - drawHeight) / 2;
+  } else {
+    // 目标区域更高，需要裁剪宽度
+    drawWidth = (height / img.height) * img.width;
+    offsetX = (width - drawWidth) / 2;
+  }
+
+  ctx.drawImage(img, x + offsetX, y + offsetY, drawWidth, drawHeight);
+}
+
+/**
+ * 绘制图片并保持宽高比完整显示在目标区域内（类似CSS的background-size: contain）
+ * 图片完整显示，但可能会有空白区域
+ */
+function drawImageContain(
+  ctx: CanvasRenderingContext2D,
+  img: ImageBitmap,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): void {
+  const imgRatio = img.width / img.height;
+  const targetRatio = width / height;
+
+  let drawWidth = width;
+  let drawHeight = height;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  // 计算绘制尺寸和偏移量，保持宽高比
+  if (targetRatio < imgRatio) {
+    // 目标区域更窄，宽度撑满，高度等比缩放
+    drawHeight = (width / img.width) * img.height;
+    offsetY = (height - drawHeight) / 2;
+  } else {
+    // 目标区域更宽，高度撑满，宽度等比缩放
+    drawWidth = (height / img.height) * img.width;
+    offsetX = (width - drawWidth) / 2;
+  }
+
+  ctx.drawImage(img, x + offsetX, y + offsetY, drawWidth, drawHeight);
 }

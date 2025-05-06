@@ -115,6 +115,6 @@ export class VisibleSprite extends BaseSprite {
     super.destroy();
     this.#lastVf?.close();
     this.#lastVf = null;
-    this.#clip.destroy();
+    // this.#clip.destroy();
   }
 }
