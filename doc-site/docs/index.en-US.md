@@ -2,7 +2,7 @@
 title: WebAV Doc Site
 hero:
   title: WebAV
-  description: 'WebAV is an SDK for <strong>creating/editing</strong> video files on the Web platform, built on WebCodecs.'
+  description: 'A web-based <strong><span style="background: linear-gradient(45deg, #E74B3C, #3499DC); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Video Editing SDK</span></strong> built on WebCodecs'
   actions:
     - text: Quick start
       link: './en-US/guide/'
