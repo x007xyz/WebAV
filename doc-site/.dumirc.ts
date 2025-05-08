@@ -21,7 +21,7 @@ export default defineConfig({
   sitemap: {
     hostname: 'https://webav-tech.github.io/WebAV/',
   },
-  analytics: { ga_v2: 'G-MC335K4KV6' },
+  analytics: { ga_v2: 'G-QZKCMSXX7N' },
   themeConfig: {
     name: '',
     logo: `${process.env.NODE_ENV === 'development' ? '' : '/WebAV'}/logo.svg`,
