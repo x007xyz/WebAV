@@ -91,3 +91,34 @@ test('split by time', async () => {
     preClip.meta.duration + postClip.meta.duration,
   );
 });
+
+test('EmbedSubtitles with font styles', async () => {
+  const es = new EmbedSubtitlesClip(txt2, {
+    videoWidth: 1280,
+    videoHeight: 720,
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+  });
+
+  // Check if the clip is created successfully
+  expect(es).toBeDefined();
+
+  const vf1 = (await es.tick(342000)).video;
+  expect(vf1?.timestamp).toBe(342000);
+  expect(vf1?.duration).toBe(3218000 - 342000);
+});
+
+test('EmbedSubtitles with numeric font weight', async () => {
+  const es = new EmbedSubtitlesClip(txt2, {
+    videoWidth: 1280,
+    videoHeight: 720,
+    fontWeight: 700, // Bold weight
+    fontStyle: 'normal',
+  });
+
+  expect(es).toBeDefined();
+
+  const vf1 = (await es.tick(342000)).video;
+  expect(vf1?.timestamp).toBe(342000);
+  expect(vf1?.duration).toBe(3218000 - 342000);
+});

@@ -193,6 +193,8 @@ document.querySelector('#mp4-srt')?.addEventListener('click', () => {
         lineWidth: 20,
         lineJoin: 'round',
         lineCap: 'round',
+        fontWeight: 700,
+        fontStyle: 'italic',
         textShadow: {
           offsetX: 2,
           offsetY: 2,
