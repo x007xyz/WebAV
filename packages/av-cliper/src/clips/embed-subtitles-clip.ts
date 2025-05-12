@@ -117,6 +117,7 @@ export class EmbedSubtitlesClip implements IClip {
       fontStyle,
       videoWidth,
       videoHeight,
+      letterSpacing,
     } = this.#opts;
     this.#lineHeight = fontSize + this.#linePadding * 2;
     this.#cvs = new OffscreenCanvas(videoWidth, videoHeight);
@@ -124,7 +125,7 @@ export class EmbedSubtitlesClip implements IClip {
     this.#ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
     this.#ctx.textAlign = 'center';
     this.#ctx.textBaseline = 'top';
-    this.#ctx.letterSpacing = this.#opts.letterSpacing ?? '0px';
+    this.#ctx.letterSpacing = letterSpacing ?? '0px';
 
     this.#meta = {
       width: videoWidth,
