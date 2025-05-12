@@ -21,6 +21,8 @@ interface IEmbedSubtitlesOpts {
   };
   videoWidth: number;
   videoHeight: number;
+  fontWeight?: string | number;
+  fontStyle?: 'normal' | 'italic';
 }
 
 declare global {
@@ -81,6 +83,8 @@ export class EmbedSubtitlesClip implements IClip {
     },
     videoWidth: 1280,
     videoHeight: 720,
+    fontWeight: 'normal',
+    fontStyle: 'normal',
   };
 
   #cvs: OffscreenCanvas;
@@ -106,12 +110,19 @@ export class EmbedSubtitlesClip implements IClip {
     this.#linePadding =
       opts.textBgColor == null ? 0 : (opts.fontSize ?? 50) * 0.2;
 
-    const { fontSize, fontFamily, videoWidth, videoHeight, letterSpacing } =
-      this.#opts;
+    const {
+      fontSize,
+      fontFamily,
+      fontWeight,
+      fontStyle,
+      videoWidth,
+      videoHeight,
+      letterSpacing,
+    } = this.#opts;
     this.#lineHeight = fontSize + this.#linePadding * 2;
     this.#cvs = new OffscreenCanvas(videoWidth, videoHeight);
     this.#ctx = this.#cvs.getContext('2d')!;
-    this.#ctx.font = `${fontSize}px ${fontFamily}`;
+    this.#ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
     this.#ctx.textAlign = 'center';
     this.#ctx.textBaseline = 'top';
     this.#ctx.letterSpacing = letterSpacing ?? '0px';
