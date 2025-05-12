@@ -1,5 +1,12 @@
 # @webav/av-cliper
 
+## 1.1.2
+
+### Patch Changes
+
+- f4c4fb4: feat(av-cliper): add font style support for subtitles. Add fontWeight and fontStyle options to EmbedSubtitlesClip. Support both string ('bold') and numeric (700) font weights. Support italic and normal font styles. Update demo and test cases.
+  - @webav/internal-utils@1.1.2
+
 ## 1.1.1
 
 ### Patch Changes
