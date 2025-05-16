@@ -46,11 +46,7 @@ export function draggabelSprite(
 
   // 查找控制 sprite 的 DOM 元素，在 renderCtrls 中创建并添加到 container 中
   const rectEl = container.querySelector('.sprite-rect') as HTMLElement;
-  if (!rectEl) {
-    return () => {
-      refline.destroy();
-    };
-  }
+  if (!rectEl) throw Error('sprite-rect DOM Node not found');
 
   // 移动sprite的处理函数
   const onRectMouseDown = (evt: MouseEvent): void => {

@@ -72,6 +72,7 @@ function createRectAndCtrlEl(container: HTMLElement): {
   const ctrlsEl = Object.fromEntries(
     CTRL_KEYS.map((k) => {
       const d = createEl('div');
+      d.classList.add(`ctrl-key-${k}`);
       d.style.cssText = `
         display: none;
         position: absolute;

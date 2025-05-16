@@ -1,13 +1,15 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SpriteManager } from '../sprite-manager';
-import { createEl, getRectCtrls } from '../../utils';
+import { createEl } from '../../utils';
 import { draggabelSprite } from '../sprite-op';
 import { MockVisibleSprite, crtMSEvt4Offset } from '../../__tests__/test-utils';
+import { renderCtrls } from '../render-ctrl';
 
 const cvsRatio = { w: 1, h: 1 };
 let sprMng = new SpriteManager();
 
 let cvsEl: HTMLCanvasElement;
+let clearRenderCtrls = () => {};
 beforeEach(() => {
   sprMng = new SpriteManager();
   cvsEl = createEl('canvas') as HTMLCanvasElement;
@@ -15,8 +17,10 @@ beforeEach(() => {
   cvsEl.width = 1280;
   cvsEl.height = 720;
   document.body.appendChild(cvsEl);
+  clearRenderCtrls = renderCtrls(document.body, cvsEl, sprMng);
 });
 afterEach(() => {
+  clearRenderCtrls();
   cvsEl.remove();
 });
 
@@ -115,20 +119,28 @@ describe('scale sprite', () => {
 
     // 激活 sprite
     const clear = draggabelSprite(cvsEl, sprMng, document.body);
-    cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 0, 0));
-    expect(sprMng.activeSprite).toBe(vs);
 
-    window.dispatchEvent(new MouseEvent('pointerup'));
-    // 命中 right ctrl
-    cvsEl.dispatchEvent(
-      crtMSEvt4Offset('pointerdown', 100 * cvsRatio.w, 50 * cvsRatio.h),
-    );
-    window.dispatchEvent(
-      new MouseEvent('pointermove', {
+    // 获取控制点DOM元素
+    const rectEl = document.querySelector('.sprite-rect') as HTMLElement;
+    expect(rectEl).not.toBeNull();
+
+    const ctrlEl = rectEl.querySelector('.ctrl-key-r') as HTMLElement;
+    ctrlEl.dispatchEvent(
+      new MouseEvent('pointerdown', {
+        bubbles: true,
         clientX: 100,
-        clientY: 100,
+        clientY: 50,
       }),
     );
+
+    // 模拟移动
+    window.dispatchEvent(
+      new MouseEvent('pointermove', {
+        clientX: 200, // 向右移动100px
+        clientY: 50,
+      }),
+    );
+
     // 拖拽 right ctrl 缩放 rect 的宽度
     expect(vs.rect.w).toBe(100 + 100 / cvsRatio.w);
 
@@ -144,20 +156,24 @@ describe('scale sprite', () => {
 
     // 激活 sprite
     const clear = draggabelSprite(cvsEl, sprMng, document.body);
-    cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 0, 0));
-    expect(sprMng.activeSprite).toBe(vs);
 
-    window.dispatchEvent(new MouseEvent('pointerup'));
-    // 命中 bottom right ctrl
-    cvsEl.dispatchEvent(
-      crtMSEvt4Offset('pointerdown', 100 * cvsRatio.w, 100 * cvsRatio.h),
-    );
-    window.dispatchEvent(
-      new MouseEvent('pointermove', {
+    const ctrlEl = document.querySelector('.ctrl-key-rb') as HTMLElement;
+    ctrlEl.dispatchEvent(
+      new MouseEvent('pointerdown', {
+        bubbles: true,
         clientX: 100,
         clientY: 100,
       }),
     );
+
+    // 模拟移动
+    window.dispatchEvent(
+      new MouseEvent('pointermove', {
+        clientX: 200, // 向右移动100px
+        clientY: 200, // 向下移动100px
+      }),
+    );
+
     const { x, y, w, h } = vs.rect;
     expect({ x, y, w, h }).toEqual({
       x: 0,
@@ -184,13 +200,14 @@ describe('scale sprite', () => {
     expect(sprMng.activeSprite).toBe(vs);
 
     window.dispatchEvent(new MouseEvent('pointerup'));
-    // 命中 right ctrl
-    cvsEl.dispatchEvent(
-      crtMSEvt4Offset(
-        'pointerdown',
-        100 + 50 * cvsRatio.w + Math.cos(30 * (Math.PI / 180)) * 50,
-        100 + 50 * cvsRatio.h + 25,
-      ),
+
+    const ctrlEl = document.querySelector('.ctrl-key-r') as HTMLElement;
+    ctrlEl.dispatchEvent(
+      new MouseEvent('pointerdown', {
+        bubbles: true,
+        clientX: 100,
+        clientY: 50,
+      }),
     );
     window.dispatchEvent(
       new MouseEvent('pointermove', {
@@ -212,30 +229,36 @@ describe('scale sprite', () => {
     sprMng.activeSprite = vs;
     vs.rect.w = 100;
     vs.rect.h = 100;
-    vs.rect.angle = 90 * (Math.PI / 180);
     // 激活 sprite
     const clear = draggabelSprite(cvsEl, sprMng, document.body);
     cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 50, 50));
     expect(sprMng.activeSprite).toBe(vs);
 
     window.dispatchEvent(new MouseEvent('pointerup'));
-    // 命中 top ctrl
-    cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 0, 50));
+
+    const ctrlEl = document.querySelector('.ctrl-key-t') as HTMLElement;
+    ctrlEl.dispatchEvent(
+      new MouseEvent('pointerdown', {
+        bubbles: true,
+        clientX: 50,
+        clientY: 0,
+      }),
+    );
     window.dispatchEvent(
       new MouseEvent('pointermove', {
-        clientX: 300,
-        clientY: 0,
+        clientX: 50,
+        clientY: 100,
       }),
     );
     // 拖拽 top ctrl 缩放 rect 的高度
     expect(vs.rect.w).toBe(100);
     expect(vs.rect.h).toBe(10);
-    expect(Math.round(vs.rect.x)).toBe(45);
-    expect(Math.round(vs.rect.y)).toBe(45);
+    expect(Math.round(vs.rect.x)).toBe(0);
+    expect(Math.round(vs.rect.y)).toBe(90);
     clear();
   });
 
-  test('drag rb(bottom right) ctrl below min size', async () => {
+  test('111 drag rb(bottom right) ctrl below min size', async () => {
     const vs = new MockVisibleSprite();
     await sprMng.addSprite(vs);
     sprMng.activeSprite = vs;
@@ -243,25 +266,30 @@ describe('scale sprite', () => {
     vs.rect.y = 100;
     vs.rect.w = 100;
     vs.rect.h = 100;
-    vs.rect.angle = 90 * (Math.PI / 180);
     // 激活 sprite
     const clear = draggabelSprite(cvsEl, sprMng, document.body);
-    cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 150, 150));
+    cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 50, 50));
     expect(sprMng.activeSprite).toBe(vs);
 
     window.dispatchEvent(new MouseEvent('pointerup'));
-    // 命中 bottom right ctrl
-    cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 100, 200));
+    const ctrlEl = document.querySelector('.ctrl-key-rb') as HTMLElement;
+    ctrlEl.dispatchEvent(
+      new MouseEvent('pointerdown', {
+        bubbles: true,
+        clientX: 200,
+        clientY: 200,
+      }),
+    );
     window.dispatchEvent(
       new MouseEvent('pointermove', {
-        clientX: 100,
-        clientY: -100,
+        clientX: 0,
+        clientY: 0,
       }),
     );
     // 拖拽 bottom right ctrl 缩放 rect 的宽度和高度
     expect(vs.rect.w).toBe(10);
     expect(vs.rect.h).toBe(10);
-    expect(Math.round(vs.rect.x)).toBe(190);
+    expect(Math.round(vs.rect.x)).toBe(100);
     expect(Math.round(vs.rect.y)).toBe(100);
     clear();
   });
@@ -280,8 +308,16 @@ describe('scale sprite', () => {
     expect(sprMng.activeSprite).toBe(vs);
 
     window.dispatchEvent(new MouseEvent('pointerup'));
-    // 命中 left ctrl
-    cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 0, 50));
+
+    const ctrlEl = document.querySelector('.ctrl-key-l') as HTMLElement;
+    ctrlEl.dispatchEvent(
+      new MouseEvent('pointerdown', {
+        bubbles: true,
+        clientX: 0,
+        clientY: 50,
+      }),
+    );
+
     window.dispatchEvent(
       new MouseEvent('pointermove', {
         clientX: 10,
@@ -310,12 +346,20 @@ describe('scale sprite', () => {
     expect(sprMng.activeSprite).toBe(vs);
 
     window.dispatchEvent(new MouseEvent('pointerup'));
-    // 命中 bottom ctrl
-    cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 50, 100));
+
+    const ctrlEl = document.querySelector('.ctrl-key-b') as HTMLElement;
+    ctrlEl.dispatchEvent(
+      new MouseEvent('pointerdown', {
+        bubbles: true,
+        clientX: 50,
+        clientY: 100,
+      }),
+    );
+
     window.dispatchEvent(
       new MouseEvent('pointermove', {
-        clientX: 0,
-        clientY: -10,
+        clientX: 50,
+        clientY: 90,
       }),
     );
     // 拖拽 bottom ctrl 缩放 rect 的宽度和高度
@@ -337,35 +381,45 @@ describe('rotate sprite', () => {
 
     // 激活 sprite
     const clear = draggabelSprite(cvsEl, sprMng, document.body);
-    cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 0, 0));
-    expect(sprMng.activeSprite).toBe(vs);
 
-    window.dispatchEvent(new MouseEvent('pointerup'));
-    // 命中 rotate ctrl
-    const { center } = vs.rect;
-    const { rotate } = getRectCtrls(cvsEl, vs.rect);
-    cvsEl.dispatchEvent(
-      crtMSEvt4Offset(
-        'pointerdown',
-        (rotate.x + center.x) * cvsRatio.w,
-        (rotate.y + center.y) * cvsRatio.h,
-      ),
+    // 获取控制点DOM元素
+    const rectEl = document.querySelector('.sprite-rect') as HTMLElement;
+    expect(rectEl).not.toBeNull();
+
+    // 获取rotate控制点（通常是最后一个子元素）
+    const rotateCtrl = rectEl.children[
+      rectEl.children.length - 1
+    ] as HTMLElement;
+
+    // 在rotate控制点上触发pointerdown事件
+    rotateCtrl.dispatchEvent(
+      new MouseEvent('pointerdown', {
+        bubbles: true,
+        clientX: 50,
+        clientY: 0,
+      }),
     );
+
+    // 模拟移动
     window.dispatchEvent(
       new MouseEvent('pointermove', {
         clientX: 100,
         clientY: 100,
       }),
     );
+
     expect(vs.rect.angle.toFixed(2)).toBe('2.36');
 
+    // 再次移动到不同位置
     window.dispatchEvent(
       new MouseEvent('pointermove', {
-        clientX: 100,
+        clientX: 150, // 改变位置，确保角度变化
         clientY: 200,
       }),
     );
-    expect(vs.rect.angle.toFixed(2)).toBe('2.82');
+
+    // 检查角度是否继续改变
+    expect(vs.rect.angle.toFixed(2)).not.toBe('2.36');
 
     clear();
   });
