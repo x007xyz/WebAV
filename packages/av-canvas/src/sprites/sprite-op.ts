@@ -1,5 +1,5 @@
 import { ESpriteManagerEvt, SpriteManager } from './sprite-manager';
-import { ICvsRatio, IPoint, RectCtrls, TCtrlKey } from '../types';
+import { CTRL_KEYS, ICvsRatio, IPoint, RectCtrls, TCtrlKey } from '../types';
 import { VisibleSprite, Rect } from '@webav/av-cliper';
 import { createEl } from '../utils';
 
@@ -24,22 +24,14 @@ export function activeSprite(
 
   const onCvsMouseDown = (evt: MouseEvent): void => {
     if (evt.button !== 0) return;
+    // 如果点击的是控制元素，不处理选择逻辑
+    if ((evt.target as HTMLElement) !== cvsEl) return;
+
     const { offsetX, offsetY } = evt;
     const ofx = offsetX / cvsRatio.w;
     const ofy = offsetY / cvsRatio.h;
-    if (sprMng.activeSprite != null) {
-      const [ctrlKey] =
-        (Object.entries(rectCtrlsGetter(sprMng.activeSprite.rect)).find(
-          ([, rect]) => rect.checkHit(ofx, ofy),
-        ) as [TCtrlKey, Rect]) ?? [];
-      if (ctrlKey != null) return;
-    }
-    sprMng.activeSprite =
-      sprMng
-        .getSprites()
-        // 排在后面的层级更高
-        .reverse()
-        .find((s) => s.visible && s.rect.checkHit(ofx, ofy)) ?? null;
+
+    sprMng.activeSpriteByCoord(ofx, ofy);
   };
 
   cvsEl.addEventListener('pointerdown', onCvsMouseDown);
@@ -51,7 +43,7 @@ export function activeSprite(
 }
 
 /**
- * 让canvas中的sprite可以被拖拽移动
+ * 让sprite可以被拖拽移动、缩放和旋转
  */
 export function draggabelSprite(
   cvsEl: HTMLCanvasElement,
@@ -76,55 +68,49 @@ export function draggabelSprite(
 
   const refline = createRefline(cvsEl, container);
 
-  let hitSpr: VisibleSprite | null = null;
-  // sprMng.activeSprite 在 av-canvas.ts -> activeSprite 中被赋值
-  const onCvsMouseDown = (evt: MouseEvent): void => {
-    // 鼠标左键才能拖拽移动
+  // 查找DOM元素
+  // todo: 通过参数传入，而不是 query
+  const rectEl = container.querySelector(
+    'div[style*="pointer-events: auto"]',
+  ) as HTMLElement;
+  if (!rectEl) {
+    return () => {
+      refline.destroy();
+      observer.disconnect();
+    };
+  }
+
+  // 移动sprite的处理函数
+  const onRectMouseDown = (evt: MouseEvent): void => {
     if (evt.button !== 0 || sprMng.activeSprite == null) return;
-    hitSpr = sprMng.activeSprite;
-    const { offsetX, offsetY, clientX, clientY } = evt;
-    // 如果已有激活 sprite，先判定是否命中其 ctrls
-    if (
-      hitRectCtrls({
-        rect: hitSpr.rect,
-        offsetX,
-        offsetY,
-        clientX,
-        clientY,
-        cvsRatio,
-        cvsEl,
-        rectCtrlsGetter,
-      })
-    ) {
-      // 命中 ctrl 是缩放 sprite，略过后续移动 sprite 逻辑
-      return;
-    }
+
+    const hitSpr = sprMng.activeSprite;
+    const { clientX, clientY } = evt;
 
     startRect = hitSpr.rect.clone();
-
     refline.magneticEffect(hitSpr.rect.x, hitSpr.rect.y, hitSpr.rect);
 
     startX = clientX;
     startY = clientY;
     window.addEventListener('pointermove', onMouseMove);
     window.addEventListener('pointerup', clearWindowEvt);
+
+    evt.stopPropagation();
   };
 
   const onMouseMove = (evt: MouseEvent): void => {
-    if (hitSpr == null || startRect == null) return;
+    if (sprMng.activeSprite == null || startRect == null) return;
 
     const { clientX, clientY } = evt;
     let expectX = startRect.x + (clientX - startX) / cvsRatio.w;
     let expectY = startRect.y + (clientY - startY) / cvsRatio.h;
 
     updateRectWithSafeMargin(
-      hitSpr.rect,
+      sprMng.activeSprite.rect,
       cvsEl,
-      refline.magneticEffect(expectX, expectY, hitSpr.rect),
+      refline.magneticEffect(expectX, expectY, sprMng.activeSprite.rect),
     );
   };
-
-  cvsEl.addEventListener('pointerdown', onCvsMouseDown);
 
   const clearWindowEvt = (): void => {
     refline.hide();
@@ -132,11 +118,81 @@ export function draggabelSprite(
     window.removeEventListener('pointerup', clearWindowEvt);
   };
 
+  // 为控制点添加事件处理
+  const setupCtrlEvents = () => {
+    if (!rectEl) return;
+
+    // 获取所有控制点元素
+    const ctrlElements = Array.from(rectEl.children) as HTMLElement[];
+
+    ctrlElements.forEach((ctrlEl, index) => {
+      const ctrlKey = CTRL_KEYS[index];
+
+      ctrlEl.addEventListener('pointerdown', (evt: MouseEvent) => {
+        if (evt.button !== 0 || sprMng.activeSprite == null) return;
+
+        const { clientX, clientY } = evt;
+
+        if (ctrlKey === 'rotate') {
+          rotateRect(
+            sprMng.activeSprite.rect,
+            cntMap2Outer(sprMng.activeSprite.rect.center, cvsRatio, cvsEl),
+          );
+        } else {
+          scaleRect({
+            sprRect: sprMng.activeSprite.rect,
+            ctrlKey,
+            startX: clientX,
+            startY: clientY,
+            cvsRatio,
+            cvsEl,
+          });
+        }
+
+        evt.stopPropagation();
+      });
+
+      // 设置适当的鼠标样式
+      if (ctrlKey === 'rotate') {
+        ctrlEl.style.cursor = 'crosshair';
+      } else {
+        const curStyles = [
+          'ns-resize',
+          'nesw-resize',
+          'ew-resize',
+          'nwse-resize',
+          'ns-resize',
+          'nesw-resize',
+          'ew-resize',
+          'nwse-resize',
+        ];
+        const curInitIdx = {
+          t: 0,
+          rt: 1,
+          r: 2,
+          rb: 3,
+          b: 4,
+          lb: 5,
+          l: 6,
+          lt: 7,
+        };
+
+        ctrlEl.style.cursor = curStyles[curInitIdx[ctrlKey]];
+      }
+    });
+  };
+
+  // 初始设置
+  rectEl.addEventListener('pointerdown', onRectMouseDown);
+  cvsEl.addEventListener('pointerdown', onRectMouseDown);
+  setupCtrlEvents();
+
   return () => {
     observer.disconnect();
     refline.destroy();
     clearWindowEvt();
-    cvsEl.removeEventListener('pointerdown', onCvsMouseDown);
+    rectEl.removeEventListener('pointerdown', onRectMouseDown);
+    cvsEl.removeEventListener('pointerdown', onRectMouseDown);
   };
 }
 

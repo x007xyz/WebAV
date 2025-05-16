@@ -32,6 +32,21 @@ export function renderCtrls(
 
   let lastActSprEvtClear = () => {};
   const { rectEl, ctrlsEl } = createRectAndCtrlEl(container);
+
+  // 添加点击事件处理
+  rectEl.addEventListener('pointerdown', (evt) => {
+    // 如果点击的是控制点，不处理点击穿透
+    if (Object.values(ctrlsEl).includes(evt.target as HTMLElement)) {
+      return;
+    }
+
+    // 获取相对于 canvas 的坐标，可能需要激活更上层的 sprite
+    const cvsRect = cvsEl.getBoundingClientRect();
+    const x = (evt.clientX - cvsRect.left) / cvsRatio.w;
+    const y = (evt.clientY - cvsRect.top) / cvsRatio.h;
+    sprMng.activeSpriteByCoord(x, y);
+  });
+
   const offSprChange = sprMng.on(ESpriteManagerEvt.ActiveSpriteChange, (s) => {
     // 每次变更，需要清理上一个事件监听器
     lastActSprEvtClear();
@@ -61,10 +76,12 @@ function createRectAndCtrlEl(container: HTMLElement): {
   const rectEl = createEl('div');
   rectEl.style.cssText = `
     position: absolute;
-    pointer-events: none;
+    z-index: 3;
+    pointer-events: auto;
     border: 1px solid #eee;
     box-sizing: border-box;
     display: none;
+    cursor: move;
   `;
   const ctrlsEl = Object.fromEntries(
     CTRL_KEYS.map((k) => {
@@ -75,6 +92,8 @@ function createRectAndCtrlEl(container: HTMLElement): {
         border: 1px solid #3ee; border-radius: 50%;
         box-sizing: border-box;
         background-color: #fff;
+        pointer-events: auto;
+        cursor: ${k === 'rotate' ? 'crosshair' : 'default'};
       `;
       return [k, d];
     }),
