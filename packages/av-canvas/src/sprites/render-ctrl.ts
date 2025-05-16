@@ -74,6 +74,7 @@ function createRectAndCtrlEl(container: HTMLElement): {
   ctrlsEl: Record<TCtrlKey, HTMLElement>;
 } {
   const rectEl = createEl('div');
+  rectEl.classList.add('sprite-rect');
   rectEl.style.cssText = `
     position: absolute;
     z-index: 3;
@@ -94,6 +95,7 @@ function createRectAndCtrlEl(container: HTMLElement): {
         background-color: #fff;
         pointer-events: auto;
         cursor: ${k === 'rotate' ? 'crosshair' : 'default'};
+        user-select: none;
       `;
       return [k, d];
     }),

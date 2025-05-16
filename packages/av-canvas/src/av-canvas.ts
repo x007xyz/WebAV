@@ -122,15 +122,10 @@ export class AVCanvas {
       ctrlGetterDestroy,
       // 鼠标样式、控制 sprite 依赖 activeSprite，
       // activeSprite 需要在他们之前监听到 mousedown 事件 (代码顺序需要靠前)
-      activeSprite(this.#cvsEl, this.#spriteManager, rectCtrlsGetter),
+      activeSprite(this.#cvsEl, this.#spriteManager),
       dynamicCusor(this.#cvsEl, this.#spriteManager, rectCtrlsGetter),
       renderCtrls(container, this.#cvsEl, this.#spriteManager, rectCtrlsGetter),
-      draggabelSprite(
-        this.#cvsEl,
-        this.#spriteManager,
-        container,
-        rectCtrlsGetter,
-      ),
+      draggabelSprite(this.#cvsEl, this.#spriteManager, container),
       this.#spriteManager.on(ESpriteManagerEvt.AddSprite, (s) => {
         const { rect } = s;
         // 默认居中

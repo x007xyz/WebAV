@@ -29,12 +29,7 @@ describe('draggabelSprite', () => {
     const spyAEL = vi.spyOn(cvsEl, 'addEventListener');
     const spyREL = vi.spyOn(cvsEl, 'removeEventListener');
 
-    const clear = draggabelSprite(
-      cvsEl,
-      sprMng,
-      document.body,
-      rectCtrlsGetter,
-    );
+    const clear = draggabelSprite(cvsEl, sprMng, document.body);
     expect(spyAEL).toBeCalledWith('pointerdown', expect.any(Function));
     expect(clear).toBeInstanceOf(Function);
 
@@ -49,12 +44,7 @@ describe('draggabelSprite', () => {
     vi.spyOn(vs.rect, 'checkHit').mockReturnValue(true);
     await sprMng.addSprite(vs);
     sprMng.activeSprite = vs;
-    const clear = draggabelSprite(
-      cvsEl,
-      sprMng,
-      document.body,
-      rectCtrlsGetter,
-    );
+    const clear = draggabelSprite(cvsEl, sprMng, document.body);
     cvsEl.dispatchEvent(new MouseEvent('pointerdown'));
 
     expect(spyAEL).toBeCalledTimes(2);
@@ -92,12 +82,7 @@ describe('draggabelSprite', () => {
     await sprMng.addSprite(vs);
     sprMng.activeSprite = vs;
 
-    const clear = draggabelSprite(
-      cvsEl,
-      sprMng,
-      document.body,
-      rectCtrlsGetter,
-    );
+    const clear = draggabelSprite(cvsEl, sprMng, document.body);
     cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 110, 110));
 
     window.dispatchEvent(
@@ -133,12 +118,7 @@ describe('scale sprite', () => {
     vs.rect.h = 100;
 
     // 激活 sprite
-    const clear = draggabelSprite(
-      cvsEl,
-      sprMng,
-      document.body,
-      rectCtrlsGetter,
-    );
+    const clear = draggabelSprite(cvsEl, sprMng, document.body);
     cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 0, 0));
     expect(sprMng.activeSprite).toBe(vs);
 
@@ -167,12 +147,7 @@ describe('scale sprite', () => {
     vs.rect.h = 100;
 
     // 激活 sprite
-    const clear = draggabelSprite(
-      cvsEl,
-      sprMng,
-      document.body,
-      rectCtrlsGetter,
-    );
+    const clear = draggabelSprite(cvsEl, sprMng, document.body);
     cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 0, 0));
     expect(sprMng.activeSprite).toBe(vs);
 
@@ -208,12 +183,7 @@ describe('scale sprite', () => {
     vs.rect.h = 100;
     vs.rect.angle = 30 * (Math.PI / 180);
     // 激活 sprite
-    const clear = draggabelSprite(
-      cvsEl,
-      sprMng,
-      document.body,
-      rectCtrlsGetter,
-    );
+    const clear = draggabelSprite(cvsEl, sprMng, document.body);
     cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 150, 150));
     expect(sprMng.activeSprite).toBe(vs);
 
@@ -248,12 +218,7 @@ describe('scale sprite', () => {
     vs.rect.h = 100;
     vs.rect.angle = 90 * (Math.PI / 180);
     // 激活 sprite
-    const clear = draggabelSprite(
-      cvsEl,
-      sprMng,
-      document.body,
-      rectCtrlsGetter,
-    );
+    const clear = draggabelSprite(cvsEl, sprMng, document.body);
     cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 50, 50));
     expect(sprMng.activeSprite).toBe(vs);
 
@@ -284,12 +249,7 @@ describe('scale sprite', () => {
     vs.rect.h = 100;
     vs.rect.angle = 90 * (Math.PI / 180);
     // 激活 sprite
-    const clear = draggabelSprite(
-      cvsEl,
-      sprMng,
-      document.body,
-      rectCtrlsGetter,
-    );
+    const clear = draggabelSprite(cvsEl, sprMng, document.body);
     cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 150, 150));
     expect(sprMng.activeSprite).toBe(vs);
 
@@ -319,12 +279,7 @@ describe('scale sprite', () => {
     vs.rect.fixedScaleCenter = true;
 
     // 激活 sprite
-    const clear = draggabelSprite(
-      cvsEl,
-      sprMng,
-      document.body,
-      rectCtrlsGetter,
-    );
+    const clear = draggabelSprite(cvsEl, sprMng, document.body);
     cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 0, 0));
     expect(sprMng.activeSprite).toBe(vs);
 
@@ -354,12 +309,7 @@ describe('scale sprite', () => {
     vs.rect.fixedScaleCenter = true;
 
     // 激活 sprite
-    const clear = draggabelSprite(
-      cvsEl,
-      sprMng,
-      document.body,
-      rectCtrlsGetter,
-    );
+    const clear = draggabelSprite(cvsEl, sprMng, document.body);
     cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 0, 0));
     expect(sprMng.activeSprite).toBe(vs);
 
@@ -390,12 +340,7 @@ describe('rotate sprite', () => {
     vs.rect.h = 100;
 
     // 激活 sprite
-    const clear = draggabelSprite(
-      cvsEl,
-      sprMng,
-      document.body,
-      rectCtrlsGetter,
-    );
+    const clear = draggabelSprite(cvsEl, sprMng, document.body);
     cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 0, 0));
     expect(sprMng.activeSprite).toBe(vs);
 

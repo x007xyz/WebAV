@@ -1,7 +1,27 @@
 import { ESpriteManagerEvt, SpriteManager } from './sprite-manager';
 import { CTRL_KEYS, ICvsRatio, IPoint, RectCtrls, TCtrlKey } from '../types';
-import { VisibleSprite, Rect } from '@webav/av-cliper';
+import { Rect } from '@webav/av-cliper';
 import { createEl } from '../utils';
+
+// 复用 canvas 比例的获取，避免重复 observer
+const cvsRatioCache = new WeakMap<HTMLCanvasElement, ICvsRatio>();
+function getCvsRatio(cvsEl: HTMLCanvasElement): ICvsRatio {
+  if (cvsRatioCache.has(cvsEl)) {
+    return cvsRatioCache.get(cvsEl)!;
+  }
+
+  const cvsRatio = {
+    w: cvsEl.clientWidth / cvsEl.width,
+    h: cvsEl.clientHeight / cvsEl.height,
+  };
+  const observer = new ResizeObserver(() => {
+    cvsRatio.w = cvsEl.clientWidth / cvsEl.width;
+    cvsRatio.h = cvsEl.clientHeight / cvsEl.height;
+  });
+  observer.observe(cvsEl);
+  cvsRatioCache.set(cvsEl, cvsRatio);
+  return cvsRatio;
+}
 
 /**
  * 鼠标点击，激活 sprite
@@ -9,24 +29,13 @@ import { createEl } from '../utils';
 export function activeSprite(
   cvsEl: HTMLCanvasElement,
   sprMng: SpriteManager,
-  rectCtrlsGetter: (rect: Rect) => RectCtrls,
 ): () => void {
-  const cvsRatio = {
-    w: cvsEl.clientWidth / cvsEl.width,
-    h: cvsEl.clientHeight / cvsEl.height,
-  };
-
-  const observer = new ResizeObserver(() => {
-    cvsRatio.w = cvsEl.clientWidth / cvsEl.width;
-    cvsRatio.h = cvsEl.clientHeight / cvsEl.height;
-  });
-  observer.observe(cvsEl);
-
   const onCvsMouseDown = (evt: MouseEvent): void => {
     if (evt.button !== 0) return;
     // 如果点击的是控制元素，不处理选择逻辑
     if ((evt.target as HTMLElement) !== cvsEl) return;
 
+    const cvsRatio = getCvsRatio(cvsEl);
     const { offsetX, offsetY } = evt;
     const ofx = offsetX / cvsRatio.w;
     const ofy = offsetY / cvsRatio.h;
@@ -37,7 +46,6 @@ export function activeSprite(
   cvsEl.addEventListener('pointerdown', onCvsMouseDown);
 
   return () => {
-    observer.disconnect();
     cvsEl.removeEventListener('pointerdown', onCvsMouseDown);
   };
 }
@@ -49,34 +57,18 @@ export function draggabelSprite(
   cvsEl: HTMLCanvasElement,
   sprMng: SpriteManager,
   container: HTMLElement,
-  rectCtrlsGetter: (rect: Rect) => RectCtrls,
 ): () => void {
-  const cvsRatio = {
-    w: cvsEl.clientWidth / cvsEl.width,
-    h: cvsEl.clientHeight / cvsEl.height,
-  };
-
-  const observer = new ResizeObserver(() => {
-    cvsRatio.w = cvsEl.clientWidth / cvsEl.width;
-    cvsRatio.h = cvsEl.clientHeight / cvsEl.height;
-  });
-  observer.observe(cvsEl);
-
   let startX = 0;
   let startY = 0;
   let startRect: Rect | null = null;
 
   const refline = createRefline(cvsEl, container);
 
-  // 查找DOM元素
-  // todo: 通过参数传入，而不是 query
-  const rectEl = container.querySelector(
-    'div[style*="pointer-events: auto"]',
-  ) as HTMLElement;
+  // 查找控制 sprite 的 DOM 元素，在 renderCtrls 中创建并添加到 container 中
+  const rectEl = container.querySelector('.sprite-rect') as HTMLElement;
   if (!rectEl) {
     return () => {
       refline.destroy();
-      observer.disconnect();
     };
   }
 
@@ -98,6 +90,7 @@ export function draggabelSprite(
     evt.stopPropagation();
   };
 
+  const cvsRatio = getCvsRatio(cvsEl);
   const onMouseMove = (evt: MouseEvent): void => {
     if (sprMng.activeSprite == null || startRect == null) return;
 
@@ -118,82 +111,85 @@ export function draggabelSprite(
     window.removeEventListener('pointerup', clearWindowEvt);
   };
 
-  // 为控制点添加事件处理
-  const setupCtrlEvents = () => {
-    if (!rectEl) return;
-
-    // 获取所有控制点元素
-    const ctrlElements = Array.from(rectEl.children) as HTMLElement[];
-
-    ctrlElements.forEach((ctrlEl, index) => {
-      const ctrlKey = CTRL_KEYS[index];
-
-      ctrlEl.addEventListener('pointerdown', (evt: MouseEvent) => {
-        if (evt.button !== 0 || sprMng.activeSprite == null) return;
-
-        const { clientX, clientY } = evt;
-
-        if (ctrlKey === 'rotate') {
-          rotateRect(
-            sprMng.activeSprite.rect,
-            cntMap2Outer(sprMng.activeSprite.rect.center, cvsRatio, cvsEl),
-          );
-        } else {
-          scaleRect({
-            sprRect: sprMng.activeSprite.rect,
-            ctrlKey,
-            startX: clientX,
-            startY: clientY,
-            cvsRatio,
-            cvsEl,
-          });
-        }
-
-        evt.stopPropagation();
-      });
-
-      // 设置适当的鼠标样式
-      if (ctrlKey === 'rotate') {
-        ctrlEl.style.cursor = 'crosshair';
-      } else {
-        const curStyles = [
-          'ns-resize',
-          'nesw-resize',
-          'ew-resize',
-          'nwse-resize',
-          'ns-resize',
-          'nesw-resize',
-          'ew-resize',
-          'nwse-resize',
-        ];
-        const curInitIdx = {
-          t: 0,
-          rt: 1,
-          r: 2,
-          rb: 3,
-          b: 4,
-          lb: 5,
-          l: 6,
-          lt: 7,
-        };
-
-        ctrlEl.style.cursor = curStyles[curInitIdx[ctrlKey]];
-      }
-    });
-  };
-
   // 初始设置
   rectEl.addEventListener('pointerdown', onRectMouseDown);
   cvsEl.addEventListener('pointerdown', onRectMouseDown);
-  setupCtrlEvents();
+  setupCtrlEvents(cvsEl, rectEl, sprMng);
 
   return () => {
-    observer.disconnect();
     refline.destroy();
     clearWindowEvt();
     rectEl.removeEventListener('pointerdown', onRectMouseDown);
     cvsEl.removeEventListener('pointerdown', onRectMouseDown);
   };
+}
+
+// 为控制点添加事件处理
+function setupCtrlEvents(
+  cvsEl: HTMLCanvasElement,
+  rectEl: HTMLElement,
+  sprMng: SpriteManager,
+) {
+  if (!rectEl) return;
+
+  // 获取所有控制点元素
+  const ctrlElements = Array.from(rectEl.children) as HTMLElement[];
+
+  const cvsRatio = getCvsRatio(cvsEl);
+  ctrlElements.forEach((ctrlEl, index) => {
+    const ctrlKey = CTRL_KEYS[index];
+    ctrlEl.addEventListener('pointerdown', (evt: MouseEvent) => {
+      if (evt.button !== 0 || sprMng.activeSprite == null) return;
+
+      const { clientX, clientY } = evt;
+
+      if (ctrlKey === 'rotate') {
+        rotateRect(
+          sprMng.activeSprite.rect,
+          cntMap2Outer(sprMng.activeSprite.rect.center, cvsRatio, cvsEl),
+        );
+      } else {
+        scaleRect({
+          sprRect: sprMng.activeSprite.rect,
+          ctrlKey,
+          startX: clientX,
+          startY: clientY,
+          cvsRatio,
+          cvsEl,
+        });
+      }
+
+      evt.stopPropagation();
+    });
+
+    // 设置适当的鼠标样式
+    if (ctrlKey === 'rotate') {
+      ctrlEl.style.cursor = 'crosshair';
+    } else {
+      const curStyles = [
+        'ns-resize',
+        'nesw-resize',
+        'ew-resize',
+        'nwse-resize',
+        'ns-resize',
+        'nesw-resize',
+        'ew-resize',
+        'nwse-resize',
+      ];
+      const curInitIdx = {
+        t: 0,
+        rt: 1,
+        r: 2,
+        rb: 3,
+        b: 4,
+        lb: 5,
+        l: 6,
+        lt: 7,
+      };
+
+      ctrlEl.style.cursor = curStyles[curInitIdx[ctrlKey]];
+    }
+  });
 }
 
 /**
@@ -383,50 +379,6 @@ function fixedRatioScale({
   return { incW, incH, incS, rotateAngle };
 }
 
-function hitRectCtrls({
-  rect,
-  cvsRatio,
-  offsetX,
-  offsetY,
-  clientX,
-  clientY,
-  cvsEl,
-  rectCtrlsGetter,
-}: {
-  rect: Rect;
-  cvsRatio: ICvsRatio;
-  offsetX: number;
-  offsetY: number;
-  clientX: number;
-  clientY: number;
-  cvsEl: HTMLCanvasElement;
-  rectCtrlsGetter: (rect: Rect) => RectCtrls;
-}): boolean {
-  // 将鼠标点击偏移坐标映射成 canvas 坐，
-  const ofx = offsetX / cvsRatio.w;
-  const ofy = offsetY / cvsRatio.h;
-  const [k] =
-    (Object.entries(rectCtrlsGetter(rect)).find(([, rect]) =>
-      rect.checkHit(ofx, ofy),
-    ) as [TCtrlKey, Rect]) ?? [];
-
-  if (k == null) return false;
-  if (k === 'rotate') {
-    rotateRect(rect, cntMap2Outer(rect.center, cvsRatio, cvsEl));
-  } else {
-    scaleRect({
-      sprRect: rect,
-      ctrlKey: k,
-      startX: clientX,
-      startY: clientY,
-      cvsRatio,
-      cvsEl,
-    });
-  }
-  // 命中 ctrl 后续是缩放 sprite，略过移动 sprite 逻辑
-  return true;
-}
-
 /**
  * 监听拖拽事件，将鼠标坐标转换为旋转角度
  * 旋转时，rect的坐标不变
@@ -613,18 +565,8 @@ export function dynamicCusor(
   sprMng: SpriteManager,
   rectCtrlsGetter: (rect: Rect) => RectCtrls,
 ): () => void {
-  const cvsRatio = {
-    w: cvsEl.clientWidth / cvsEl.width,
-    h: cvsEl.clientHeight / cvsEl.height,
-  };
-
-  const observer = new ResizeObserver(() => {
-    cvsRatio.w = cvsEl.clientWidth / cvsEl.width;
-    cvsRatio.h = cvsEl.clientHeight / cvsEl.height;
-  });
-  observer.observe(cvsEl);
-
   const cvsStyle = cvsEl.style;
+  const cvsRatio = getCvsRatio(cvsEl);
 
   let actSpr = sprMng.activeSprite;
   sprMng.on(ESpriteManagerEvt.ActiveSpriteChange, (s) => {
@@ -700,7 +642,6 @@ export function dynamicCusor(
   window.addEventListener('pointerup', onWindowUp);
 
   return () => {
-    observer.disconnect();
     cvsEl.removeEventListener('pointermove', onMove);
     cvsEl.removeEventListener('pointerdown', onDown);
     window.removeEventListener('pointerup', onWindowUp);
