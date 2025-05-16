@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SpriteManager } from '../sprite-manager';
-import { createCtrlsGetter, createEl } from '../../utils';
+import { createEl, getRectCtrls } from '../../utils';
 import { draggabelSprite } from '../sprite-op';
 import { MockVisibleSprite, crtMSEvt4Offset } from '../../__tests__/test-utils';
 
@@ -8,19 +8,15 @@ const cvsRatio = { w: 1, h: 1 };
 let sprMng = new SpriteManager();
 
 let cvsEl: HTMLCanvasElement;
-let rectCtrlsGetter: ReturnType<typeof createCtrlsGetter>['rectCtrlsGetter'];
-let ctrlGetterDestroy: () => void;
 beforeEach(() => {
   sprMng = new SpriteManager();
   cvsEl = createEl('canvas') as HTMLCanvasElement;
   cvsEl.style.cssText = 'width: 1280px; height: 720px';
   cvsEl.width = 1280;
   cvsEl.height = 720;
-  ({ rectCtrlsGetter, destroy: ctrlGetterDestroy } = createCtrlsGetter(cvsEl));
   document.body.appendChild(cvsEl);
 });
 afterEach(() => {
-  ctrlGetterDestroy();
   cvsEl.remove();
 });
 
@@ -347,7 +343,7 @@ describe('rotate sprite', () => {
     window.dispatchEvent(new MouseEvent('pointerup'));
     // 命中 rotate ctrl
     const { center } = vs.rect;
-    const { rotate } = rectCtrlsGetter(vs.rect);
+    const { rotate } = getRectCtrls(cvsEl, vs.rect);
     cvsEl.dispatchEvent(
       crtMSEvt4Offset(
         'pointerdown',

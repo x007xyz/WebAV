@@ -1,13 +1,11 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { AVCanvas } from '../av-canvas';
-import { createCtrlsGetter, createEl } from '../utils';
+import { createEl, getRectCtrls } from '../utils';
 import { crtMSEvt4Offset } from './test-utils';
 import { IClip, VisibleSprite } from '@webav/av-cliper';
 
 let container: HTMLDivElement;
 let avCvs: AVCanvas;
-let rectCtrlsGetter: ReturnType<typeof createCtrlsGetter>['rectCtrlsGetter'];
-let ctrlGetterDestroy: () => void;
 beforeEach(() => {
   container = createEl('div') as HTMLDivElement;
   container.style.cssText = `
@@ -20,12 +18,9 @@ beforeEach(() => {
     height: 720,
     bgColor: '#333',
   });
-  const cvsEl = container.querySelector('canvas') as HTMLCanvasElement;
-  ({ rectCtrlsGetter, destroy: ctrlGetterDestroy } = createCtrlsGetter(cvsEl));
 });
 
 afterEach(() => {
-  ctrlGetterDestroy();
   container.remove();
   avCvs.destroy();
 });
@@ -62,7 +57,7 @@ test('dynamicCusor', async () => {
   expect(cvsEl.style.cursor).toBe('move');
 
   const { center } = vs.rect;
-  const { lt, rotate } = rectCtrlsGetter(vs.rect);
+  const { lt, rotate } = getRectCtrls(cvsEl, vs.rect);
   cvsEl.dispatchEvent(
     crtMSEvt4Offset('pointermove', lt.x + center.x, lt.y + center.y),
   );

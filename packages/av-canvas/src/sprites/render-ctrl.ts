@@ -1,33 +1,18 @@
-import { CTRL_KEYS, ICvsRatio, RectCtrls, TCtrlKey } from '../types';
-import { createEl } from '../utils';
-import { VisibleSprite, Rect } from '@webav/av-cliper';
+import { CTRL_KEYS, TCtrlKey } from '../types';
+import { createEl, getCvsRatio, getRectCtrls } from '../utils';
+import { VisibleSprite } from '@webav/av-cliper';
 import { ESpriteManagerEvt, SpriteManager } from './sprite-manager';
 
 export function renderCtrls(
   container: HTMLElement,
   cvsEl: HTMLCanvasElement,
   sprMng: SpriteManager,
-  rectCtrlsGetter: (rect: Rect) => RectCtrls,
 ): () => void {
-  const cvsRatio = {
-    w: cvsEl.clientWidth / cvsEl.width,
-    h: cvsEl.clientHeight / cvsEl.height,
-  };
-
+  const cvsRatio = getCvsRatio(cvsEl);
   const observer = new ResizeObserver(() => {
-    cvsRatio.w = cvsEl.clientWidth / cvsEl.width;
-    cvsRatio.h = cvsEl.clientHeight / cvsEl.height;
-
     if (sprMng.activeSprite == null) return;
-    syncCtrlElPos(
-      sprMng.activeSprite,
-      rectEl,
-      ctrlsEl,
-      cvsRatio,
-      rectCtrlsGetter,
-    );
+    syncCtrlElPos(sprMng.activeSprite, cvsEl, rectEl, ctrlsEl);
   });
-
   observer.observe(cvsEl);
 
   let lastActSprEvtClear = () => {};
@@ -54,9 +39,9 @@ export function renderCtrls(
       rectEl.style.display = 'none';
       return;
     }
-    syncCtrlElPos(s, rectEl, ctrlsEl, cvsRatio, rectCtrlsGetter);
+    syncCtrlElPos(s, cvsEl, rectEl, ctrlsEl);
     lastActSprEvtClear = s.on('propsChange', () => {
-      syncCtrlElPos(s, rectEl, ctrlsEl, cvsRatio, rectCtrlsGetter);
+      syncCtrlElPos(s, cvsEl, rectEl, ctrlsEl);
     });
     rectEl.style.display = '';
   });
@@ -111,11 +96,11 @@ function createRectAndCtrlEl(container: HTMLElement): {
 
 function syncCtrlElPos(
   s: VisibleSprite,
+  cvsEl: HTMLCanvasElement,
   rectEl: HTMLElement,
   ctrlsEl: Record<TCtrlKey, HTMLElement>,
-  cvsRatio: ICvsRatio,
-  rectCtrlsGetter: (rect: Rect) => RectCtrls,
 ): void {
+  const cvsRatio = getCvsRatio(cvsEl);
   const { x, y, w, h, angle } = s.rect;
   Object.assign(rectEl.style, {
     left: `${x * cvsRatio.w}px`,
@@ -124,7 +109,7 @@ function syncCtrlElPos(
     height: `${h * cvsRatio.h}px`,
     rotate: `${angle}rad`,
   });
-  Object.entries(rectCtrlsGetter(s.rect)).forEach(([k, { x, y, w, h }]) => {
+  Object.entries(getRectCtrls(cvsEl, s.rect)).forEach(([k, { x, y, w, h }]) => {
     // ctrl 是相对中心点定位的
     Object.assign(ctrlsEl[k as TCtrlKey].style, {
       display: 'block',

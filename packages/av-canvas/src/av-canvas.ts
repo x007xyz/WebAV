@@ -14,7 +14,7 @@ import {
   dynamicCusor,
 } from './sprites/sprite-op';
 import { IResolution } from './types';
-import { createCtrlsGetter, createEl } from './utils';
+import { createEl } from './utils';
 import { workerTimer, EventTool } from '@webav/internal-utils';
 
 /**
@@ -115,16 +115,12 @@ export class AVCanvas {
 
     this.#spriteManager = new SpriteManager();
 
-    const { rectCtrlsGetter, destroy: ctrlGetterDestroy } = createCtrlsGetter(
-      this.#cvsEl,
-    );
     this.#clears.push(
-      ctrlGetterDestroy,
       // 鼠标样式、控制 sprite 依赖 activeSprite，
       // activeSprite 需要在他们之前监听到 mousedown 事件 (代码顺序需要靠前)
       activeSprite(this.#cvsEl, this.#spriteManager),
-      dynamicCusor(this.#cvsEl, this.#spriteManager, rectCtrlsGetter),
-      renderCtrls(container, this.#cvsEl, this.#spriteManager, rectCtrlsGetter),
+      dynamicCusor(this.#cvsEl, this.#spriteManager),
+      renderCtrls(container, this.#cvsEl, this.#spriteManager),
       draggabelSprite(this.#cvsEl, this.#spriteManager, container),
       this.#spriteManager.on(ESpriteManagerEvt.AddSprite, (s) => {
         const { rect } = s;

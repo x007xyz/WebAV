@@ -1,27 +1,7 @@
 import { ESpriteManagerEvt, SpriteManager } from './sprite-manager';
 import { CTRL_KEYS, ICvsRatio, IPoint, RectCtrls, TCtrlKey } from '../types';
 import { Rect } from '@webav/av-cliper';
-import { createEl } from '../utils';
-
-// 复用 canvas 比例的获取，避免重复 observer
-const cvsRatioCache = new WeakMap<HTMLCanvasElement, ICvsRatio>();
-function getCvsRatio(cvsEl: HTMLCanvasElement): ICvsRatio {
-  if (cvsRatioCache.has(cvsEl)) {
-    return cvsRatioCache.get(cvsEl)!;
-  }
-
-  const cvsRatio = {
-    w: cvsEl.clientWidth / cvsEl.width,
-    h: cvsEl.clientHeight / cvsEl.height,
-  };
-  const observer = new ResizeObserver(() => {
-    cvsRatio.w = cvsEl.clientWidth / cvsEl.width;
-    cvsRatio.h = cvsEl.clientHeight / cvsEl.height;
-  });
-  observer.observe(cvsEl);
-  cvsRatioCache.set(cvsEl, cvsRatio);
-  return cvsRatio;
-}
+import { createEl, getCvsRatio, getRectCtrls } from '../utils';
 
 /**
  * 鼠标点击，激活 sprite
@@ -563,7 +543,6 @@ function createRefline(cvsEl: HTMLCanvasElement, container: HTMLElement) {
 export function dynamicCusor(
   cvsEl: HTMLCanvasElement,
   sprMng: SpriteManager,
-  rectCtrlsGetter: (rect: Rect) => RectCtrls,
 ): () => void {
   const cvsStyle = cvsEl.style;
   const cvsRatio = getCvsRatio(cvsEl);
@@ -609,7 +588,7 @@ export function dynamicCusor(
     const ofx = offsetX / cvsRatio.w;
     const ofy = offsetY / cvsRatio.h;
     const [ctrlKey] =
-      (Object.entries(rectCtrlsGetter(actSpr.rect)).find(([, rect]) =>
+      (Object.entries(getRectCtrls(cvsEl, actSpr.rect)).find(([, rect]) =>
         rect.checkHit(ofx, ofy),
       ) as [TCtrlKey, Rect]) ?? [];
 
