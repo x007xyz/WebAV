@@ -1,5 +1,12 @@
 # @webav/av-recorder
 
+## 1.1.3-snapshot.0
+
+### Patch Changes
+
+- @webav/av-cliper@1.1.3-snapshot.0
+- @webav/internal-utils@1.1.3-snapshot.0
+
 ## 1.1.2
 
 ### Patch Changes
