@@ -197,3 +197,13 @@ recorder.start(); // => ReadableStream
 ---
 
 加微信 `liujun_fenghen` 备注 WebAV，邀请进入 WebAV 音视频技术交流 微信群
+
+## 赞助者
+
+我们要感谢以下 GitHub 赞助者对 WebAV 开发的支持：
+
+<div>
+  <a href="https://github.com/425776024"><img src="https://github.com/425776024.png" width="50" height="50" alt="425776024" /></a>
+</div>
+
+您的支持帮助我们持续改进和维护这个项目！
