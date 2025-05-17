@@ -1,13 +1,11 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { AVCanvas } from '../av-canvas';
-import { createCtrlsGetter, createEl } from '../utils';
+import { createEl, getRectCtrls } from '../utils';
 import { crtMSEvt4Offset } from './test-utils';
 import { IClip, VisibleSprite } from '@webav/av-cliper';
 
 let container: HTMLDivElement;
 let avCvs: AVCanvas;
-let rectCtrlsGetter: ReturnType<typeof createCtrlsGetter>['rectCtrlsGetter'];
-let ctrlGetterDestroy: () => void;
 beforeEach(() => {
   container = createEl('div') as HTMLDivElement;
   container.style.cssText = `
@@ -20,12 +18,9 @@ beforeEach(() => {
     height: 720,
     bgColor: '#333',
   });
-  const cvsEl = container.querySelector('canvas') as HTMLCanvasElement;
-  ({ rectCtrlsGetter, destroy: ctrlGetterDestroy } = createCtrlsGetter(cvsEl));
 });
 
 afterEach(() => {
-  ctrlGetterDestroy();
   container.remove();
   avCvs.destroy();
 });
@@ -48,7 +43,7 @@ test('captureStream', () => {
   expect(ms).toBeInstanceOf(MediaStream);
 });
 
-test('dynamicCusor', async () => {
+test('dynamic ctrl elements cusor', async () => {
   const vs = new VisibleSprite(new MockClip());
   vs.rect.x = 100;
   vs.rect.y = 100;
@@ -56,32 +51,42 @@ test('dynamicCusor', async () => {
   vs.rect.h = 100;
   await avCvs.addSprite(vs);
   const cvsEl = container.querySelector('canvas') as HTMLCanvasElement;
+
+  vi.useFakeTimers();
+  // 点击激活 sprite
   cvsEl.dispatchEvent(crtMSEvt4Offset('pointerdown', 110, 110));
   window.dispatchEvent(crtMSEvt4Offset('pointerup', 110, 110));
 
-  expect(cvsEl.style.cursor).toBe('move');
+  // 等待防抖处理完成
+  vi.advanceTimersByTime(500);
 
-  const { center } = vs.rect;
-  const { lt, rotate } = rectCtrlsGetter(vs.rect);
-  cvsEl.dispatchEvent(
-    crtMSEvt4Offset('pointermove', lt.x + center.x, lt.y + center.y),
-  );
-  expect(cvsEl.style.cursor).toBe('nwse-resize');
+  // 获取控制点元素
+  const rectEl = container.querySelector('.sprite-rect') as HTMLElement;
+  // 检查矩形区域的鼠标样式
+  expect(rectEl.style.cursor).toBe('move');
 
-  cvsEl.dispatchEvent(
-    crtMSEvt4Offset(
-      'pointermove',
-      rotate.x + center.x + 1,
-      rotate.y + center.y + 1,
-    ),
-  );
-  expect(cvsEl.style.cursor).toBe('crosshair');
+  // 检查左上角控制点的鼠标样式
+  const ltCtrl = rectEl.querySelector('.ctrl-key-lt') as HTMLElement;
+  expect(ltCtrl.style.cursor).toBe('nwse-resize');
 
-  cvsEl.dispatchEvent(crtMSEvt4Offset('pointermove', 0, 0));
-  expect(cvsEl.style.cursor).toBe('');
+  // 检查右上角控制点的鼠标样式
+  const rtCtrl = rectEl.querySelector('.ctrl-key-rt') as HTMLElement;
+  expect(rtCtrl.style.cursor).toBe('nesw-resize');
 
-  cvsEl.dispatchEvent(crtMSEvt4Offset('pointermove', 110, 110));
-  expect(cvsEl.style.cursor).toBe('move');
+  // 检查旋转控制点的鼠标样式
+  const rotateCtrl = rectEl.querySelector('.ctrl-key-rotate') as HTMLElement;
+  expect(rotateCtrl.style.cursor).toBe('crosshair');
+
+  // 旋转 sprite 并检查控制点鼠标样式是否相应变化
+  vs.rect.angle = Math.PI / 4; // 旋转45度
+
+  vi.advanceTimersByTime(500);
+
+  // 旋转45度后，控制点的鼠标样式应该变化
+  expect(ltCtrl.style.cursor).toBe('ns-resize');
+  expect(rtCtrl.style.cursor).toBe('ew-resize');
+
+  vi.useRealTimers();
 });
 
 test('AVCanvas events', async () => {

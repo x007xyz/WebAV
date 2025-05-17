@@ -1,15 +1,23 @@
 import { Rect } from '@webav/av-cliper';
-import { RectCtrls } from './types';
+import { ICvsRatio, RectCtrls } from './types';
 
 export function createEl(tagName: string): HTMLElement {
   return document.createElement(tagName);
 }
 
+const rectGetterCache = new WeakMap<
+  HTMLCanvasElement,
+  (rect: Rect) => RectCtrls
+>();
 /**
  * 根据 canvas 创建该画布上的 Sprite 控制点生成器
  * 因为控制点的大小需要根据画布的大小动态调整
  */
-export function createCtrlsGetter(cvsEl: HTMLCanvasElement) {
+export function getRectCtrls(cvsEl: HTMLCanvasElement, rect: Rect) {
+  if (rectGetterCache.has(cvsEl)) {
+    return rectGetterCache.get(cvsEl)!(rect);
+  }
+
   let ctrlSize = 16;
   const cvsResizeOb = new ResizeObserver((entries) => {
     const fisrtEntry = entries[0];
@@ -46,10 +54,26 @@ export function createCtrlsGetter(cvsEl: HTMLCanvasElement) {
       rotate: new Rect(-hfRtSz, -hfH - sz * 2 - hfRtSz, rtSz, rtSz, rect),
     };
   }
-  return {
-    rectCtrlsGetter,
-    destroy: () => {
-      cvsResizeOb.disconnect();
-    },
+  rectGetterCache.set(cvsEl, rectCtrlsGetter);
+  return rectCtrlsGetter(rect);
+}
+
+// 复用 canvas 比例的获取，避免重复 observer
+const cvsRatioCache = new WeakMap<HTMLCanvasElement, ICvsRatio>();
+export function getCvsRatio(cvsEl: HTMLCanvasElement): ICvsRatio {
+  if (cvsRatioCache.has(cvsEl)) {
+    return cvsRatioCache.get(cvsEl)!;
+  }
+
+  const cvsRatio = {
+    w: cvsEl.clientWidth / cvsEl.width,
+    h: cvsEl.clientHeight / cvsEl.height,
   };
+  const observer = new ResizeObserver(() => {
+    cvsRatio.w = cvsEl.clientWidth / cvsEl.width;
+    cvsRatio.h = cvsEl.clientHeight / cvsEl.height;
+  });
+  observer.observe(cvsEl);
+  cvsRatioCache.set(cvsEl, cvsRatio);
+  return cvsRatio;
 }

@@ -193,15 +193,12 @@ If this project has been helpful to you, please sponsor the author to a milk tea
 
 [Paypal.me](https://paypal.me/hughfenghen)
 
-<!--
-ChatGPT:
+## Sponsors
 
-你是一位精通中英文的资深翻译，长时间从事计算机领域的技术文章翻译工作。
+We would like to thank our GitHub sponsors who support the development of WebAV:
 
-我正在为一个音视频开源项目撰写 README 中文文档，需要你帮忙将中文翻译为英文。
+<div>
+  <a href="https://github.com/425776024"><img src="https://github.com/425776024.png" width="50" height="50" alt="425776024" /></a>
+</div>
 
-翻译过程有以下要求：
-- 翻译结果需符合英语母语者的习惯，符合技术文章规范，可以进行适当润色
-- 翻译的内容为 Markdown 文本，翻译结果应该保持 Markdown 格式
-- 不需要翻译 html、js 代码，但需要翻译代码中中文注释
-- 不需要翻译 URL 链接 -->
+Your support helps us continue to improve and maintain this project!

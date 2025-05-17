@@ -27,6 +27,14 @@ export class SpriteManager {
     this.#evtTool.emit(ESpriteManagerEvt.ActiveSpriteChange, s);
   }
 
+  activeSpriteByCoord(x: number, y: number): void {
+    this.activeSprite =
+      this.getSprites()
+        // 排在后面的层级更高
+        .reverse()
+        .find((s) => s.visible && s.rect.checkHit(x, y)) ?? null;
+  }
+
   async addSprite(vs: VisibleSprite): Promise<void> {
     await vs.ready;
     this.#sprites.push(vs);
