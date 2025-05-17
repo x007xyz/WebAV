@@ -1,5 +1,7 @@
 # @webav/internal-utils
 
+## 1.1.3
+
 ## 1.1.3-snapshot.0
 
 ## 1.1.2

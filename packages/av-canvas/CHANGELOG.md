@@ -1,5 +1,13 @@
 # @webav/av-canvas
 
+## 1.1.3
+
+### Patch Changes
+
+- 21332d9: fix: sprites beyond canvas boundaries cannot interact
+  - @webav/av-cliper@1.1.3
+  - @webav/internal-utils@1.1.3
+
 ## 1.1.3-snapshot.0
 
 ### Patch Changes
