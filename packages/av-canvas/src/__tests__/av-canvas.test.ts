@@ -1,8 +1,8 @@
+import { IClip, VisibleSprite } from '@webav/av-cliper';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { AVCanvas } from '../av-canvas';
-import { createEl, getRectCtrls } from '../utils';
+import { createEl } from '../utils';
 import { crtMSEvt4Offset } from './test-utils';
-import { IClip, VisibleSprite } from '@webav/av-cliper';
 
 let container: HTMLDivElement;
 let avCvs: AVCanvas;

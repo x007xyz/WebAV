@@ -1,8 +1,8 @@
-import { ESpriteManagerEvt, SpriteManager } from './sprite-manager';
-import { CTRL_KEYS, ICvsRatio, IPoint, TCtrlKey } from '../types';
 import { Rect } from '@webav/av-cliper';
-import { createEl, getCvsRatio, getRectCtrls } from '../utils';
 import { debounce } from '@webav/internal-utils';
+import { CTRL_KEYS, ICvsRatio, IPoint, TCtrlKey } from '../types';
+import { createEl, getCvsRatio } from '../utils';
+import { ESpriteManagerEvt, SpriteManager } from './sprite-manager';
 
 /**
  * 鼠标点击，激活 sprite
