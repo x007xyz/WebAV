@@ -1,7 +1,8 @@
 import { ESpriteManagerEvt, SpriteManager } from './sprite-manager';
-import { CTRL_KEYS, ICvsRatio, IPoint, RectCtrls, TCtrlKey } from '../types';
+import { CTRL_KEYS, ICvsRatio, IPoint, TCtrlKey } from '../types';
 import { Rect } from '@webav/av-cliper';
 import { createEl, getCvsRatio, getRectCtrls } from '../utils';
+import { debounce } from '@webav/internal-utils';
 
 /**
  * 鼠标点击，激活 sprite
@@ -90,13 +91,14 @@ export function draggabelSprite(
   // 初始设置
   rectEl.addEventListener('pointerdown', onRectMouseDown);
   cvsEl.addEventListener('pointerdown', onRectMouseDown);
-  setupCtrlEvents(cvsEl, rectEl, sprMng);
+  const offCtrlEvt = setupCtrlEvents(cvsEl, rectEl, sprMng);
 
   return () => {
     refline.destroy();
     clearWindowEvt();
     rectEl.removeEventListener('pointerdown', onRectMouseDown);
     cvsEl.removeEventListener('pointerdown', onRectMouseDown);
+    offCtrlEvt();
   };
 }
 
@@ -106,12 +108,11 @@ function setupCtrlEvents(
   rectEl: HTMLElement,
   sprMng: SpriteManager,
 ) {
-  if (!rectEl) return;
-
   // 获取所有控制点元素
   const ctrlElements = Array.from(rectEl.children) as HTMLElement[];
 
   const cvsRatio = getCvsRatio(cvsEl);
+  // 鼠标按下对应的节点，进行对应的操作（旋转、缩放）
   ctrlElements.forEach((ctrlEl, index) => {
     const ctrlKey = CTRL_KEYS[index];
     ctrlEl.addEventListener('pointerdown', (evt: MouseEvent) => {
@@ -137,35 +138,65 @@ function setupCtrlEvents(
 
       evt.stopPropagation();
     });
-
-    // 设置适当的鼠标样式
-    if (ctrlKey === 'rotate') {
-      ctrlEl.style.cursor = 'crosshair';
-    } else {
-      const curStyles = [
-        'ns-resize',
-        'nesw-resize',
-        'ew-resize',
-        'nwse-resize',
-        'ns-resize',
-        'nesw-resize',
-        'ew-resize',
-        'nwse-resize',
-      ];
-      const curInitIdx = {
-        t: 0,
-        rt: 1,
-        r: 2,
-        rb: 3,
-        b: 4,
-        lb: 5,
-        l: 6,
-        lt: 7,
-      };
-
-      ctrlEl.style.cursor = curStyles[curInitIdx[ctrlKey]];
-    }
   });
+
+  ctrlElements[CTRL_KEYS.indexOf('rotate')].style.cursor = 'crosshair';
+
+  // 根据角度，动态调整每个控制节点的鼠标样式
+  const curStyles = [
+    'ns-resize',
+    'nesw-resize',
+    'ew-resize',
+    'nwse-resize',
+    'ns-resize',
+    'nesw-resize',
+    'ew-resize',
+    'nwse-resize',
+  ];
+  const curInitIdx = {
+    t: 0,
+    rt: 1,
+    r: 2,
+    rb: 3,
+    b: 4,
+    lb: 5,
+    l: 6,
+    lt: 7,
+  };
+
+  let offPropsEvt = () => {};
+  const offActSprEvt = sprMng.on(ESpriteManagerEvt.ActiveSpriteChange, (s) => {
+    offPropsEvt();
+    if (s == null) return;
+
+    const updateCursorStyle = debounce(function () {
+      const { angle } = s.rect;
+      const oa = angle < 0 ? angle + 2 * Math.PI : angle;
+
+      ctrlElements.forEach((ctrlEl, index) => {
+        const ctrlKey = CTRL_KEYS[index];
+        if (ctrlKey === 'rotate') return;
+        // 每个控制点的初始样式（idx） + 旋转角度导致的偏移，即为新鼠标样式
+        // 每旋转45°，偏移+1，以此在curStyles中循环
+        const idx =
+          (curInitIdx[ctrlKey] +
+            Math.floor((oa + Math.PI / 8) / (Math.PI / 4))) %
+          8;
+        ctrlEl.style.cursor = curStyles[idx];
+      });
+    }, 300);
+
+    offPropsEvt = s.on('propsChange', (props) => {
+      if (props.rect?.angle == null) return;
+      updateCursorStyle();
+    });
+
+    updateCursorStyle();
+  });
+  return () => {
+    offPropsEvt();
+    offActSprEvt();
+  };
 }
 
 /**
@@ -530,95 +561,5 @@ function createRefline(cvsEl: HTMLCanvasElement, container: HTMLElement) {
     destroy() {
       lineWrap.remove();
     },
-  };
-}
-
-/**
- * 根据当前位置（sprite & ctrls），动态调整鼠标样式
- */
-export function dynamicCusor(
-  cvsEl: HTMLCanvasElement,
-  sprMng: SpriteManager,
-): () => void {
-  const cvsStyle = cvsEl.style;
-  const cvsRatio = getCvsRatio(cvsEl);
-
-  let actSpr = sprMng.activeSprite;
-  sprMng.on(ESpriteManagerEvt.ActiveSpriteChange, (s) => {
-    actSpr = s;
-    if (s == null) cvsStyle.cursor = '';
-  });
-  // 鼠标按下时，在操作过程中，不需要变换鼠标样式
-  let isMSDown = false;
-  const onDown = ({ offsetX, offsetY }: MouseEvent): void => {
-    isMSDown = true;
-    // 将鼠标点击偏移坐标映射成 canvas 坐，
-    const ofx = offsetX / cvsRatio.w;
-    const ofy = offsetY / cvsRatio.h;
-    // 直接选中 sprite 时，需要改变鼠标样式为 move
-    if (actSpr?.rect.checkHit(ofx, ofy) === true && cvsStyle.cursor === '') {
-      cvsStyle.cursor = 'move';
-    }
-  };
-  const onWindowUp = (): void => {
-    isMSDown = false;
-  };
-
-  // 八个 ctrl 点位对应的鼠标样式，构成循环
-  const curStyles = [
-    'ns-resize',
-    'nesw-resize',
-    'ew-resize',
-    'nwse-resize',
-    'ns-resize',
-    'nesw-resize',
-    'ew-resize',
-    'nwse-resize',
-  ];
-  const curInitIdx = { t: 0, rt: 1, r: 2, rb: 3, b: 4, lb: 5, l: 6, lt: 7 };
-
-  const onMove = (evt: MouseEvent): void => {
-    // 按下之后，不再变化，因为可能是在拖拽控制点
-    if (actSpr == null || isMSDown) return;
-    const { offsetX, offsetY } = evt;
-    const ofx = offsetX / cvsRatio.w;
-    const ofy = offsetY / cvsRatio.h;
-    const [ctrlKey] =
-      (Object.entries(getRectCtrls(cvsEl, actSpr.rect)).find(([, rect]) =>
-        rect.checkHit(ofx, ofy),
-      ) as [TCtrlKey, Rect]) ?? [];
-
-    if (ctrlKey != null) {
-      if (ctrlKey === 'rotate') {
-        cvsStyle.cursor = 'crosshair';
-        return;
-      }
-      // 旋转后，控制点的箭头指向也需要修正
-      const angle = actSpr.rect.angle;
-      const oa = angle < 0 ? angle + 2 * Math.PI : angle;
-      // 每个控制点的初始样式（idx） + 旋转角度导致的偏移，即为新鼠标样式
-      // 每旋转45°，偏移+1，以此在curStyles中循环
-      const idx =
-        (curInitIdx[ctrlKey] + Math.floor((oa + Math.PI / 8) / (Math.PI / 4))) %
-        8;
-      cvsStyle.cursor = curStyles[idx];
-      return;
-    }
-    if (actSpr.rect.checkHit(ofx, ofy)) {
-      cvsStyle.cursor = 'move';
-      return;
-    }
-    // 未命中 ctrls、sprite，重置为默认鼠标样式
-    cvsStyle.cursor = '';
-  };
-
-  cvsEl.addEventListener('pointermove', onMove);
-  cvsEl.addEventListener('pointerdown', onDown);
-  window.addEventListener('pointerup', onWindowUp);
-
-  return () => {
-    cvsEl.removeEventListener('pointermove', onMove);
-    cvsEl.removeEventListener('pointerdown', onDown);
-    window.removeEventListener('pointerup', onWindowUp);
   };
 }

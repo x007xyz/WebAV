@@ -8,11 +8,7 @@ import {
 } from '@webav/av-cliper';
 import { renderCtrls } from './sprites/render-ctrl';
 import { ESpriteManagerEvt, SpriteManager } from './sprites/sprite-manager';
-import {
-  activeSprite,
-  draggabelSprite,
-  dynamicCusor,
-} from './sprites/sprite-op';
+import { activeSprite, draggabelSprite } from './sprites/sprite-op';
 import { IResolution } from './types';
 import { createEl } from './utils';
 import { workerTimer, EventTool } from '@webav/internal-utils';
@@ -119,7 +115,6 @@ export class AVCanvas {
       // 鼠标样式、控制 sprite 依赖 activeSprite，
       // activeSprite 需要在他们之前监听到 mousedown 事件 (代码顺序需要靠前)
       activeSprite(this.#cvsEl, this.#spriteManager),
-      dynamicCusor(this.#cvsEl, this.#spriteManager),
       renderCtrls(container, this.#cvsEl, this.#spriteManager),
       draggabelSprite(this.#cvsEl, this.#spriteManager, container),
       this.#spriteManager.on(ESpriteManagerEvt.AddSprite, (s) => {
