@@ -1,13 +1,3 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
-import {
-  Timeline,
-  TimelineAction,
-  TimelineRow,
-  TimelineState,
-} from '@xzdarcy/react-timeline-editor';
-import './video-editor.css';
-import { AVCanvas } from '../src';
 import {
   AudioClip,
   ImgClip,
@@ -15,6 +5,16 @@ import {
   VisibleSprite,
   renderTxt2ImgBitmap,
 } from '@webav/av-cliper';
+import {
+  Timeline,
+  TimelineAction,
+  TimelineRow,
+  TimelineState,
+} from '@xzdarcy/react-timeline-editor';
+import React, { useEffect, useRef, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import { AVCanvas } from '../src';
+import './video-editor.css';
 
 type TLActionWithName = TimelineAction & { name: string };
 

@@ -508,6 +508,7 @@ function createRefline(cvsEl: HTMLCanvasElement, container: HTMLElement) {
   const lineWrap = createEl('div');
   lineWrap.style.cssText = `
     position: absolute;
+    z-index: 4;
     top: 0; left: 0;
     width: 100%; height: 100%;
     pointer-events: none;
@@ -534,25 +535,45 @@ function createRefline(cvsEl: HTMLCanvasElement, container: HTMLElement) {
   return {
     magneticEffect(expectX: number, expectY: number, rect: Rect) {
       const retVal = { x: expectX, y: expectY };
-      let reflineKey: keyof typeof reflineSettings;
-      let correctionState = { x: false, y: false };
-      for (reflineKey in reflineSettings) {
-        const { prop, val } = reflineSettings[reflineKey].ref;
-        if (correctionState[prop]) continue;
 
+      // 记录每个维度(x,y)的最小距离和对应的参考线
+      const minDist = { x: magneticDistance, y: magneticDistance };
+
+      type RefLineKey = keyof typeof reflineEls;
+      const activeReflines = { x: '', y: '' } as {
+        x: RefLineKey | '';
+        y: RefLineKey | '';
+      };
+
+      // 隐藏所有参考线，稍后会显示激活的参考线
+      Object.values(reflineEls).forEach((el) => (el.style.display = 'none'));
+
+      // 遍历所有参考线
+      for (const reflineKey in reflineSettings) {
+        const { prop, val } =
+          reflineSettings[reflineKey as keyof typeof reflineSettings].ref;
         const refVal = val(rect);
-        if (
-          Math.abs(rect[prop] - refVal) <= magneticDistance &&
-          Math.abs(rect[prop] - (prop === 'x' ? expectX : expectY)) <=
-            magneticDistance
-        ) {
+        const currentVal = prop === 'x' ? expectX : expectY;
+
+        // 计算与参考线的距离
+        const dist = Math.abs(currentVal - refVal);
+
+        // 在磁吸范围内，且比当前记录的最小距离更近
+        if (dist <= magneticDistance && dist < minDist[prop]) {
+          minDist[prop] = dist;
           retVal[prop] = refVal;
-          reflineEls[reflineKey].style.display = 'block';
-          correctionState[prop] = true;
-        } else {
-          reflineEls[reflineKey].style.display = 'none';
+          activeReflines[prop] = reflineKey as RefLineKey;
         }
       }
+
+      // 显示激活的参考线
+      if (activeReflines.x) {
+        reflineEls[activeReflines.x].style.display = 'block';
+      }
+      if (activeReflines.y) {
+        reflineEls[activeReflines.y].style.display = 'block';
+      }
+
       return retVal;
     },
     hide() {
