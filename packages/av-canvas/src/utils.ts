@@ -18,7 +18,7 @@ export function getRectCtrls(cvsEl: HTMLCanvasElement, rect: Rect) {
     return rectGetterCache.get(cvsEl)!(rect);
   }
 
-  let ctrlSize = 16;
+  let ctrlSize = 10;
   const cvsResizeOb = new ResizeObserver((entries) => {
     const fisrtEntry = entries[0];
     if (fisrtEntry == null) return;

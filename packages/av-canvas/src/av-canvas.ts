@@ -1,17 +1,18 @@
 import {
-  Log,
   Combinator,
-  OffscreenSprite,
-  VisibleSprite,
-  MediaStreamClip,
   ICombinatorOpts,
+  Log,
+  MediaStreamClip,
+  OffscreenSprite,
+  Rect,
+  VisibleSprite,
 } from '@webav/av-cliper';
+import { EventTool, workerTimer } from '@webav/internal-utils';
 import { renderCtrls } from './sprites/render-ctrl';
 import { ESpriteManagerEvt, SpriteManager } from './sprites/sprite-manager';
 import { activeSprite, draggabelSprite } from './sprites/sprite-op';
 import { IResolution } from './types';
-import { createEl } from './utils';
-import { workerTimer, EventTool } from '@webav/internal-utils';
+import { createEl, getRectCtrls } from './utils';
 
 /**
  * 默认的音频设置，⚠️ 不要变更它的值 ⚠️
@@ -108,6 +109,10 @@ export class AVCanvas {
     attchEl.appendChild(container);
 
     createEmptyOscillatorNode(this.#audioCtx).connect(this.#captureAudioDest);
+
+    // 创建 this.#cvsEl 时自动设置 ctrlSize 初始值
+    // 避免首次渲染时 ctrls 节点大小不符合期望，所以这里不需要它的返回值
+    getRectCtrls(this.#cvsEl, { x: 0, y: 0, w: 0, h: 0 } as Rect);
 
     this.#spriteManager = new SpriteManager();
 

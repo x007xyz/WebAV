@@ -1,6 +1,6 @@
+import { VisibleSprite } from '@webav/av-cliper';
 import { CTRL_KEYS, TCtrlKey } from '../types';
 import { createEl, getCvsRatio, getRectCtrls } from '../utils';
-import { VisibleSprite } from '@webav/av-cliper';
 import { ESpriteManagerEvt, SpriteManager } from './sprite-manager';
 
 export function renderCtrls(
