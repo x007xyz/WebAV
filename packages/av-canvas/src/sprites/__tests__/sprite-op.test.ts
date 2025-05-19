@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { SpriteManager } from '../sprite-manager';
-import { createEl } from '../../utils';
-import { draggabelSprite } from '../sprite-op';
 import { MockVisibleSprite, crtMSEvt4Offset } from '../../__tests__/test-utils';
+import { createEl } from '../../utils';
 import { renderCtrls } from '../render-ctrl';
+import { SpriteManager } from '../sprite-manager';
+import { draggabelSprite } from '../sprite-op';
 
 const cvsRatio = { w: 1, h: 1 };
 let sprMng = new SpriteManager();
@@ -258,7 +258,7 @@ describe('scale sprite', () => {
     clear();
   });
 
-  test('111 drag rb(bottom right) ctrl below min size', async () => {
+  test('drag rb(bottom right) ctrl below min size', async () => {
     const vs = new MockVisibleSprite();
     await sprMng.addSprite(vs);
     sprMng.activeSprite = vs;
