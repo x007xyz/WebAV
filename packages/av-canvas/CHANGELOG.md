@@ -1,5 +1,13 @@
 # @webav/av-canvas
 
+## 1.1.4
+
+### Patch Changes
+
+- 661a07f: fix: dragging sprites may cause position jittering
+  - @webav/av-cliper@1.1.4
+  - @webav/internal-utils@1.1.4
+
 ## 1.1.3
 
 ### Patch Changes
