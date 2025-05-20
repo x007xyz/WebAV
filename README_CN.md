@@ -204,6 +204,7 @@ recorder.start(); // => ReadableStream
 
 <div>
   <a href="https://github.com/425776024"><img src="https://github.com/425776024.png" width="50" height="50" alt="425776024" /></a>
+  <a href="https://github.com/CheckCoder"><img src="https://github.com/CheckCoder.png" width="50" height="50" alt="CheckCoder" /></a>
 </div>
 
 您的支持帮助我们持续改进和维护这个项目！
