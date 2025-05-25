@@ -23,7 +23,7 @@ export default defineConfig({
   },
   analytics: { ga_v2: 'G-QZKCMSXX7N' },
   themeConfig: {
-    name: '',
+    name: 'WebAV',
     logo: `${process.env.NODE_ENV === 'development' ? '' : '/WebAV'}/logo.svg`,
     hideHomeNav: true,
     socialLinks: {
