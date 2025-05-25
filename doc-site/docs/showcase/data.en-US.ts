@@ -1,5 +1,5 @@
 export default {
-  tips: 'Projects utilizing WebAV can submit their work via issues for recommendation—open-source projects are free; commercial products should contact the author to discuss sponsorship fees.',
+  tips: 'Projects utilizing WebAV can submit their work via issues for recommendation—open-source projects are free; commercial products should <a href="https://fenghen.me/posts/2025/04/11/business-cooperation/" target="_blank">contact the author</a> to discuss sponsorship fees.',
   list: [
     {
       name: 'WebAV Pro',

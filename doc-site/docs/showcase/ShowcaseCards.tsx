@@ -33,7 +33,10 @@ const ShowcaseCards: React.FC<ShowcaseCardsProps> = ({
 }) => {
   return (
     <>
-      <div className="text-center italic">{tips}</div>
+      <div
+        className="text-center italic"
+        dangerouslySetInnerHTML={{ __html: tips }}
+      />
       <div className="flex flex-wrap">
         {list?.map((item, index) => (
           <div key={index} className="mx-8 my-6">

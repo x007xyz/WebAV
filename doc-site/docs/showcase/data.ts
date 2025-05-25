@@ -1,5 +1,5 @@
 export default {
-  tips: '使用了 WebAV 的项目可创建 Issue 投稿推荐自己的作品，开源项目免费，商业产品请联系作者详聊赞助费。',
+  tips: '使用了 WebAV 的项目可创建 Issue 投稿推荐自己的作品，开源项目免费，商业产品请<a href="https://fenghen.me/posts/2025/04/11/business-cooperation/" target="_blank">联系作者</a>详聊赞助费。',
   list: [
     {
       name: 'WebAV Pro',
