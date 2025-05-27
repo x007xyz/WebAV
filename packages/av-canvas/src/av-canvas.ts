@@ -13,7 +13,7 @@ import {
   draggabelSprite,
   dynamicCusor,
 } from './sprites/sprite-op';
-import { IResolution } from './types';
+import { IAnchor, IResolution } from './types';
 import { createCtrlsGetter, createEl } from './utils';
 import { workerTimer, EventTool } from '@fly-cut/internal-utils';
 
@@ -52,6 +52,7 @@ function createInitCvsEl(resolution: IResolution): HTMLCanvasElement {
   - 分割（裁剪）素材
   - 控制素材在视频中的空间属性（坐标、旋转、缩放）
   - 控制素材在视频中的时间属性（偏移、时长）
+  - 设置坐标系原点位置
   - 实时预览播放
   - 纯浏览器环境生成视频
 
@@ -100,6 +101,9 @@ export class AVCanvas {
   // 在 AVCanvas 类中添加
   #backgroundImage: ImageBitmap | null = null;
   #originalBackgroundImage: ImageBitmap | null = null;
+
+  // 添加锚点属性
+  #anchor: IAnchor = { x: 0, y: 0 };
 
   /**
    * 创建 `AVCanvas` 类的实例。
@@ -150,6 +154,7 @@ export class AVCanvas {
         const { rect } = s;
         // 默认居中
         if (rect.x === 0 && rect.y === 0) {
+          // 考虑锚点的情况
           rect.x = (this.#cvsEl.width - rect.w) / 2;
           rect.y = (this.#cvsEl.height - rect.h) / 2;
         }
@@ -170,63 +175,6 @@ export class AVCanvas {
         return;
       }
       runCnt += 1;
-      this.#cvsCtx.fillStyle = opts.bgColor;
-      this.#cvsCtx.fillRect(0, 0, this.#cvsEl.width, this.#cvsEl.height);
-
-      // 如果有背景图片，绘制背景图片
-      if (this.#backgroundImage) {
-        const { width, height } = this.#cvsEl;
-        const { mode, opacity } = this.#backgroundOptions;
-
-        // 保存当前上下文状态
-        this.#cvsCtx.save();
-
-        // 设置透明度
-        if (opacity !== 1) {
-          this.#cvsCtx.globalAlpha = opacity;
-        }
-
-        // 根据不同模式绘制背景
-        switch (mode) {
-          case 'cover':
-            // 覆盖模式，保持宽高比填满整个画布
-            drawImageCover(
-              this.#cvsCtx,
-              this.#backgroundImage,
-              0,
-              0,
-              width,
-              height,
-            );
-            break;
-          case 'contain':
-            // 包含模式，保持宽高比完整显示图片
-            drawImageContain(
-              this.#cvsCtx,
-              this.#backgroundImage,
-              0,
-              0,
-              width,
-              height,
-            );
-            break;
-          case 'stretch':
-            // 拉伸模式，拉伸填满整个画布
-            this.#cvsCtx.drawImage(this.#backgroundImage, 0, 0, width, height);
-            break;
-          case 'repeat':
-            // 重复模式，平铺填满整个画布
-            const pattern = this.#cvsCtx.createPattern(
-              this.#backgroundImage,
-              'repeat',
-            );
-            if (pattern) {
-              this.#cvsCtx.fillStyle = pattern;
-              this.#cvsCtx.fillRect(0, 0, width, height);
-            }
-            break;
-        }
-      }
       this.#render();
 
       if (lastRenderTime !== this.#renderTime) {
@@ -273,9 +221,61 @@ export class AVCanvas {
     }
     this.#updateRenderTime(ts);
 
+    // 清除画布
+    cvsCtx.fillStyle = this.#opts.bgColor;
+    cvsCtx.fillRect(0, 0, this.#cvsEl.width, this.#cvsEl.height);
+
+    // 如果有背景图片，绘制背景图片
+    if (this.#backgroundImage) {
+      const { width, height } = this.#cvsEl;
+      const { mode, opacity } = this.#backgroundOptions;
+
+      // 保存当前上下文状态
+      cvsCtx.save();
+
+      // 设置透明度
+      if (opacity !== 1) {
+        cvsCtx.globalAlpha = opacity;
+      }
+
+      // 根据不同模式绘制背景
+      switch (mode) {
+        case 'cover':
+          // 覆盖模式，保持宽高比填满整个画布
+          drawImageCover(cvsCtx, this.#backgroundImage, 0, 0, width, height);
+          break;
+        case 'contain':
+          // 包含模式，保持宽高比完整显示图片
+          drawImageContain(cvsCtx, this.#backgroundImage, 0, 0, width, height);
+          break;
+        case 'stretch':
+          // 拉伸模式，拉伸填满整个画布
+          cvsCtx.drawImage(this.#backgroundImage, 0, 0, width, height);
+          break;
+        case 'repeat':
+          // 重复模式，平铺填满整个画布
+          const pattern = cvsCtx.createPattern(this.#backgroundImage, 'repeat');
+          if (pattern) {
+            cvsCtx.fillStyle = pattern;
+            cvsCtx.fillRect(0, 0, width, height);
+          }
+          break;
+      }
+
+      // 恢复上下文状态
+      cvsCtx.restore();
+    }
+
     const ctxDestAudioData: Float32Array[][] = [];
     for (const s of this.#spriteManager.getSprites()) {
       cvsCtx.save();
+
+      // 应用锚点变换
+      if (this.#anchor.x !== 0 || this.#anchor.y !== 0) {
+        // 保存当前的变换矩阵
+        cvsCtx.translate(this.#anchor.x, this.#anchor.y);
+      }
+
       const { audio } = s.render(cvsCtx, ts - s.time.offset);
       cvsCtx.restore();
 
@@ -615,6 +615,36 @@ export class AVCanvas {
   clearBackgroundImage(): void {
     this.#backgroundImage = null;
     this.#originalBackgroundImage = null;
+  }
+
+  /**
+   * 刷新当前画布内容
+   * @description 强制重新渲染当前画布的所有内容，包括背景和所有精灵
+   */
+  refresh(): void {
+    // 更新渲染时间并暂停播放，确保所有内容都会被重新渲染
+    this.#updateRenderTime(this.#renderTime);
+    this.#pause();
+  }
+
+  /**
+   * 设置画布的坐标原点
+   * @param x - 原点的 x 坐标（0-1 之间表示百分比，大于 1 表示具体像素值）
+   * @param y - 原点的 y 坐标（0-1 之间表示百分比，大于 1 表示具体像素值）
+   */
+  setAnchor(x: number, y: number): void {
+    // 计算实际锚点坐标
+    const width = this.#cvsEl.width;
+    const height = this.#cvsEl.height;
+
+    // 如果 x, y 在 0-1 之间，认为是百分比值
+    const anchorX = x >= 0 && x <= 1 ? x * width : x;
+    const anchorY = y >= 0 && y <= 1 ? y * height : y;
+
+    this.#anchor = { x: anchorX, y: anchorY };
+
+    // 只需要触发重新渲染，让画布使用新的锚点
+    this.#render();
   }
 }
 

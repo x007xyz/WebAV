@@ -1,34 +1,6 @@
 import { Log } from '@fly-cut/internal-utils';
 import { IClip } from './iclip';
-
-interface IEmbedSubtitlesOpts {
-  color?: string;
-  textBgColor?: string | null;
-  type?: 'srt';
-  fontFamily?: string;
-  fontSize?: number;
-  letterSpacing?: string | null;
-  // 字幕偏离底部的距离
-  bottomOffset?: number;
-  strokeStyle?: string;
-  lineWidth?: number | null;
-  lineCap?: CanvasLineCap | null;
-  lineJoin?: CanvasLineJoin | null;
-  textShadow?: {
-    offsetX: number;
-    offsetY: number;
-    blur: number;
-    color: string;
-  };
-  videoWidth: number;
-  videoHeight: number;
-}
-
-declare global {
-  interface OffscreenCanvasRenderingContext2D {
-    letterSpacing: string;
-  }
-}
+import { ITextStyle } from './text-clip';
 
 interface SubtitleStruct {
   start: number;
@@ -36,22 +8,19 @@ interface SubtitleStruct {
   text: string;
 }
 
+interface IEmbedSubtitlesOpts {
+  type?: 'srt';
+  width: number;
+  height: number;
+  style?: Partial<ITextStyle>;
+}
+
 /**
  * 嵌入式字幕，将字幕（目前仅支持 SRT 格式）嵌入视频画面中
- *
- * @example
- * const es = new EmbedSubtitlesClip(srtSubtitleStr, {
- *   videoWidth: 1280,
- *   videoHeight: 720,
- *   fontFamily: 'Noto Sans SC',
- *   color: 'white',
- * });
  */
 export class EmbedSubtitlesClip implements IClip {
   ready: IClip['ready'];
-
   #subtitles: SubtitleStruct[] = [];
-
   #meta = {
     width: 0,
     height: 0,
@@ -62,33 +31,38 @@ export class EmbedSubtitlesClip implements IClip {
     return { ...this.#meta };
   }
 
-  #opts: Required<IEmbedSubtitlesOpts> = {
-    color: '#FFF',
-    textBgColor: null,
-    type: 'srt',
+  #defaultStyle: Required<ITextStyle> = {
     fontSize: 30,
-    letterSpacing: null,
-    bottomOffset: 30,
     fontFamily: 'Noto Sans SC',
-    strokeStyle: '#000',
-    lineWidth: null,
-    lineCap: null,
-    lineJoin: null,
-    textShadow: {
-      offsetX: 2,
-      offsetY: 2,
-      blur: 4,
-      color: '#000',
-    },
-    videoWidth: 1280,
-    videoHeight: 720,
+    fontWeight: 'normal',
+    fontColor: '#FFF',
+    fontStyle: 'normal',
+    textAlign: 'center',
+    letterSpacing: 0,
+    lineHeight: 1.5,
+    stroke: '#000',
+    strokeWidth: 5,
+    shadow: true,
+    shadowColor: '#000',
+    shadowBlur: 4,
+    shadowAngle: 45,
+    shadowDistance: 2,
+    padding: 0,
+    backgroundColor: '',
+    wordWrapWidth: 0,
+    breakWords: true,
   };
 
-  #cvs: OffscreenCanvas;
-  #ctx: OffscreenCanvasRenderingContext2D;
+  #opts: {
+    type: 'srt';
+    width: number;
+    height: number;
+    style: Required<ITextStyle>;
+  };
 
+  #cvs: OffscreenCanvas = new OffscreenCanvas(1, 1);
+  #ctx: OffscreenCanvasRenderingContext2D = this.#cvs.getContext('2d')!;
   #lastVF: VideoFrame | null = null;
-
   #lineHeight = 0;
   #linePadding = 0;
 
@@ -102,107 +76,263 @@ export class EmbedSubtitlesClip implements IClip {
         }));
     if (this.#subtitles.length === 0) throw Error('No subtitles content');
 
-    this.#opts = Object.assign(this.#opts, opts);
-    // 如果需要绘制背景，则需要给文字添加边距
-    this.#linePadding =
-      opts.textBgColor == null ? 0 : (opts.fontSize ?? 50) * 0.2;
+    this.#opts = {
+      type: 'srt',
+      width: opts.width,
+      height: opts.height,
+      style: {
+        ...this.#defaultStyle,
+        ...opts.style,
+      },
+    };
 
-    const { fontSize, fontFamily, videoWidth, videoHeight, letterSpacing } =
-      this.#opts;
-    this.#lineHeight = fontSize + this.#linePadding * 2;
-    this.#cvs = new OffscreenCanvas(videoWidth, videoHeight);
-    this.#ctx = this.#cvs.getContext('2d')!;
-    this.#ctx.font = `${fontSize}px ${fontFamily}`;
-    this.#ctx.textAlign = 'center';
-    this.#ctx.textBaseline = 'top';
-    this.#ctx.letterSpacing = letterSpacing ?? '0px';
+    // 初始化画布和上下文
+    this.#initCanvas();
 
     this.#meta = {
-      width: videoWidth,
-      height: videoHeight,
+      width: this.#opts.width,
+      height: this.#opts.height,
       duration: this.#subtitles.at(-1)?.end ?? 0,
     };
-    // 字幕的宽高 由视频画面内容决定
+
     this.ready = Promise.resolve(this.meta);
   }
 
-  #renderTxt(txt: string) {
-    Log.info('renderTxt', txt);
-    const lines = txt
-      .split('\n')
-      .reverse()
-      .map((t) => t.trim());
+  /**
+   * 初始化画布和上下文
+   */
+  #initCanvas() {
+    const style = this.#opts.style;
 
-    const { width, height } = this.#cvs;
+    // 计算padding
+    let paddingTop = 0,
+      paddingRight = 0,
+      paddingBottom = 0,
+      paddingLeft = 0;
 
+    if (typeof style.padding === 'number') {
+      paddingTop = paddingRight = paddingBottom = paddingLeft = style.padding;
+    } else if (style.padding) {
+      paddingTop = style.padding.top || 0;
+      paddingRight = style.padding.right || 0;
+      paddingBottom = style.padding.bottom || 0;
+      paddingLeft = style.padding.left || 0;
+    }
+
+    // 保存padding值供后续使用
+    this.#linePadding = Math.max(paddingLeft, paddingRight);
+    // 行高只需要考虑字体大小和行间距
+    this.#lineHeight = style.fontSize * style.lineHeight;
+
+    // 初始化画布
+    this.#cvs = new OffscreenCanvas(this.#opts.width, this.#opts.height);
+    this.#ctx = this.#cvs.getContext('2d')!;
+
+    // 设置字体
+    this.#setFont();
+  }
+
+  /**
+   * 设置字体样式
+   */
+  #setFont() {
     const {
-      color,
       fontSize,
-      textBgColor,
-      textShadow,
-      strokeStyle,
-      lineWidth,
-      lineCap,
-      lineJoin,
-      bottomOffset,
-    } = this.#opts;
+      fontFamily,
+      fontWeight,
+      fontStyle,
+      textAlign,
+      letterSpacing,
+    } = this.#opts.style;
+    const fontString = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+    this.#ctx.font = fontString;
+    this.#ctx.textAlign = textAlign;
+    this.#ctx.textBaseline = 'middle';
+    this.#ctx.letterSpacing = `${letterSpacing}px`;
+  }
+
+  /**
+   * 计算单行文本的宽度
+   */
+  #calculateLineWidth(line: string): number {
+    const { letterSpacing } = this.#opts.style;
+    if (letterSpacing === 0) {
+      return this.#ctx.measureText(line).width;
+    }
+
+    const chars = line.split('');
+    return chars.reduce((width, char, index) => {
+      const charWidth = this.#ctx.measureText(char).width;
+      return width + charWidth + (index < chars.length - 1 ? letterSpacing : 0);
+    }, 0);
+  }
+
+  /**
+   * 计算文本换行
+   */
+  #calculateWrappedLines(text: string): string[] {
+    const { wordWrapWidth, breakWords = true } = this.#opts.style;
+    if (!wordWrapWidth) return text.split('\n');
+
+    const lines: string[] = [];
+    const paragraphs = text.split('\n');
+
+    for (const paragraph of paragraphs) {
+      if (!paragraph) {
+        lines.push('');
+        continue;
+      }
+
+      if (!breakWords) {
+        // 按词换行
+        const words = paragraph.split(' ');
+        let currentLine = '';
+
+        for (const word of words) {
+          const testLine = currentLine ? currentLine + ' ' + word : word;
+          const lineWidth = this.#calculateLineWidth(testLine);
+
+          if (lineWidth > wordWrapWidth && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
+        }
+
+        if (currentLine) {
+          lines.push(currentLine);
+        }
+      } else {
+        // 按字符换行
+        let currentLine = '';
+        const chars = Array.from(paragraph);
+
+        for (const char of chars) {
+          const testLine = currentLine + char;
+          const lineWidth = this.#calculateLineWidth(testLine);
+
+          if (lineWidth > wordWrapWidth && currentLine) {
+            lines.push(currentLine);
+            currentLine = char;
+          } else {
+            currentLine = testLine;
+          }
+        }
+
+        if (currentLine) {
+          lines.push(currentLine);
+        }
+      }
+    }
+
+    return lines;
+  }
+
+  /**
+   * 渲染文本
+   */
+  #renderText(text: string) {
+    const { width, height } = this.#cvs;
+    const style = this.#opts.style;
     const ctx = this.#ctx;
 
+    // 清除画布
     ctx.clearRect(0, 0, width, height);
-    ctx.globalAlpha = 0.6;
-    // 测试canvas背景
-    // ctx.fillStyle = 'red'
-    // ctx.fillRect(0, 0, this.#cvs.width, this.#cvs.height)
 
-    let bottomDistance = bottomOffset;
-    for (const lineStr of lines) {
-      const txtMeas = ctx.measureText(lineStr);
-      const centerX = width / 2;
-      if (textBgColor != null) {
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.shadowBlur = 0;
-        // 字幕背景
-        ctx.fillStyle = textBgColor;
-        ctx.globalAlpha = 0.5;
-        ctx.fillRect(
-          centerX - txtMeas.actualBoundingBoxLeft - this.#linePadding,
-          height - bottomDistance - this.#lineHeight,
-          txtMeas.width + this.#linePadding * 2,
-          this.#lineHeight,
-        );
-      } else {
-      }
+    // 计算文本行
+    const lines = this.#calculateWrappedLines(text);
 
-      ctx.shadowColor = textShadow.color;
-      ctx.shadowOffsetX = textShadow.offsetX;
-      ctx.shadowOffsetY = textShadow.offsetY;
-      ctx.shadowBlur = textShadow.blur;
-
-      ctx.globalAlpha = 1;
-
-      if (strokeStyle != null) {
-        ctx.lineWidth = lineWidth ?? fontSize / 6;
-        if (lineCap != null) ctx.lineCap = lineCap;
-        if (lineJoin != null) ctx.lineJoin = lineJoin;
-        ctx.strokeStyle = strokeStyle;
-        ctx.strokeText(
-          lineStr,
-          centerX,
-          height - bottomDistance - this.#lineHeight + this.#linePadding,
-        );
-      }
-
-      ctx.fillStyle = color;
-      ctx.fillText(
-        lineStr,
-        centerX,
-        height - bottomDistance - this.#lineHeight + this.#linePadding,
-      );
-
-      // 多行，底部偏移距离叠加
-      bottomDistance += this.#lineHeight + fontSize * 0.2;
+    // 计算padding
+    let paddingTop = 0,
+      paddingBottom = 0;
+    if (typeof style.padding === 'number') {
+      paddingTop = paddingBottom = style.padding;
+    } else if (style.padding) {
+      paddingTop = style.padding.top || 0;
+      paddingBottom = style.padding.bottom || 0;
     }
+
+    // 计算文本块的总高度（包含上下padding）
+    const totalTextHeight = lines.length * this.#lineHeight;
+    const totalHeight = totalTextHeight + paddingTop + paddingBottom;
+
+    // 计算起始Y位置（从底部向上，考虑padding）
+    const startY = height - paddingBottom - totalTextHeight;
+
+    // 逐行渲染文本
+    lines.forEach((line, index) => {
+      const lineY = startY + index * this.#lineHeight + this.#lineHeight / 2;
+      this.#renderTextLine(line, width / 2, lineY);
+    });
+  }
+
+  /**
+   * 渲染单行文本
+   */
+  #renderTextLine(line: string, x: number, y: number) {
+    const { style } = this.#opts;
+    const ctx = this.#ctx;
+
+    // 绘制背景，只在明确设置了背景色且不为空字符串时才绘制
+    if (style.backgroundColor && style.backgroundColor !== '') {
+      const txtMeas = ctx.measureText(line);
+      const bgWidth = txtMeas.width + this.#linePadding * 2;
+      const bgHeight = this.#lineHeight;
+      const bgX = x - bgWidth / 2;
+      const bgY = y - bgHeight / 2;
+
+      ctx.fillStyle = style.backgroundColor;
+      ctx.globalAlpha = 0.5;
+      ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
+    }
+
+    // 设置阴影
+    if (style.shadow) {
+      ctx.shadowColor = style.shadowColor;
+      const offsetX =
+        style.shadowDistance * Math.cos(style.shadowAngle * (Math.PI / 180));
+      const offsetY =
+        style.shadowDistance * Math.sin(style.shadowAngle * (Math.PI / 180));
+      ctx.shadowOffsetX = offsetX;
+      ctx.shadowOffsetY = offsetY;
+      ctx.shadowBlur = style.shadowBlur;
+    } else {
+      ctx.shadowColor = 'rgba(0,0,0,0)';
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.globalAlpha = 1;
+
+    // 绘制描边
+    if (style.stroke) {
+      ctx.lineWidth = style.strokeWidth;
+      ctx.strokeStyle = style.stroke;
+      ctx.strokeText(line, x, y);
+    }
+
+    // 绘制文本
+    ctx.fillStyle = style.fontColor;
+    ctx.fillText(line, x, y);
+  }
+
+  /**
+   * 更新字幕样式
+   */
+  setStyle(style: Partial<ITextStyle>) {
+    this.#opts.style = {
+      ...this.#opts.style,
+      ...style,
+    };
+
+    // 重新初始化画布
+    this.#initCanvas();
+
+    // 清除缓存帧
+    this.#lastVF?.close();
+    this.#lastVF = null;
   }
 
   /**
@@ -210,7 +340,8 @@ export class EmbedSubtitlesClip implements IClip {
    */
   async tick(time: number): Promise<{
     video?: VideoFrame;
-    state: 'done' | 'success';
+    audio?: Float32Array[];
+    state: 'success' | 'done';
   }> {
     if (
       this.#lastVF != null &&
@@ -241,7 +372,7 @@ export class EmbedSubtitlesClip implements IClip {
       return { video: vf.clone(), state: 'success' };
     }
 
-    this.#renderTxt(it.text);
+    this.#renderText(it.text);
 
     const vf = new VideoFrame(this.#cvs, {
       timestamp: time,
@@ -284,8 +415,16 @@ export class EmbedSubtitlesClip implements IClip {
       .map((s) => ({ ...s, start: s.start - time, end: s.end - time }));
     if (postFirstIt != null) postSlice.unshift(postFirstIt);
     return [
-      new EmbedSubtitlesClip(preSlice, this.#opts),
-      new EmbedSubtitlesClip(postSlice, this.#opts),
+      new EmbedSubtitlesClip(preSlice, {
+        width: this.#opts.width,
+        height: this.#opts.height,
+        style: this.#opts.style,
+      }),
+      new EmbedSubtitlesClip(postSlice, {
+        width: this.#opts.width,
+        height: this.#opts.height,
+        style: this.#opts.style,
+      }),
     ] as [this, this];
   }
 
@@ -293,13 +432,15 @@ export class EmbedSubtitlesClip implements IClip {
    * @see {@link IClip.clone}
    */
   async clone() {
-    return new EmbedSubtitlesClip(this.#subtitles.slice(0), this.#opts) as this;
+    return new EmbedSubtitlesClip(this.#subtitles.slice(0), {
+      width: this.#opts.width,
+      height: this.#opts.height,
+      style: this.#opts.style,
+    }) as this;
   }
 
   /**
    * 通过时间戳，修改字幕内容
-   * @param subtitle SubtitleStruct
-   * @returns
    */
   updateSubtitle(subtitle: SubtitleStruct) {
     this.#subtitles.forEach((s) => {
@@ -310,25 +451,34 @@ export class EmbedSubtitlesClip implements IClip {
   }
 
   /**
-   * 获取字幕距离底部的偏移距离
-   * @returns 当前的bottomOffset值（像素）
+   * 删除指定的字幕并更新后续字幕的时间戳
    */
-  getBottomOffset(): number {
-    return this.#opts.bottomOffset;
-  }
+  deleteSubtitle(subtitle: SubtitleStruct): SubtitleStruct[] {
+    const deleteIndex = this.#subtitles.findIndex(
+      (s) => s.start === subtitle.start && s.end === subtitle.end,
+    );
 
-  /**
-   * 设置字幕距离底部的偏移距离
-   * @param value 新的bottomOffset值（像素）
-   */
-  setBottomOffset(value: number): void {
-    if (typeof value !== 'number' || value < 0) {
-      throw new Error('bottomOffset must be a non-negative number');
+    if (deleteIndex === -1) {
+      return this.#subtitles;
     }
-    this.#opts.bottomOffset = value;
-    // 清除上一帧缓存，确保下次tick时使用新的bottomOffset
+
+    const deletedDuration = subtitle.end - subtitle.start;
+    this.#subtitles.splice(deleteIndex, 1);
+
+    // 更新删除位置之后所有字幕的时间戳
+    for (let i = deleteIndex; i < this.#subtitles.length; i++) {
+      this.#subtitles[i].start -= deletedDuration;
+      this.#subtitles[i].end -= deletedDuration;
+    }
+
+    // 更新总时长
+    this.#meta.duration = this.#subtitles.at(-1)?.end ?? 0;
+
+    // 清除缓存帧
     this.#lastVF?.close();
     this.#lastVF = null;
+
+    return [...this.#subtitles];
   }
 
   /**
@@ -339,7 +489,7 @@ export class EmbedSubtitlesClip implements IClip {
   }
 }
 
-// SRT字幕格式 https://www.cnblogs.com/tocy/p/subtitle-format-srt.html
+// SRT字幕格式解析
 function srtTimeToSeconds(time: string) {
   const match = time.match(/(\d{2}):(\d{2}):(\d{2}),(\d{3})/);
   if (match == null) throw Error(`time format error: ${time}`);
@@ -353,46 +503,39 @@ function srtTimeToSeconds(time: string) {
 }
 
 function parseSrt(srt: string) {
-  return (
-    srt
-      .split(/\r|\n/)
-      .map((s) => s.trim())
-      .filter((str) => str.length > 0)
-      // 匹配时间戳标记行，匹配失败的为字幕内容
-      .map((s) => ({
-        lineStr: s,
-        match: s.match(
-          /(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/,
-        ),
-      }))
-      // 过滤掉时间上一行的数字标记
-      .filter(
-        ({ lineStr }, idx, source) =>
-          !(/^\d+$/.test(lineStr) && source[idx + 1]?.match != null),
-      )
-      // 按时间标记行聚合，拼接字幕内容到 text 字段
-      .reduce(
-        (acc, { lineStr, match }) => {
-          if (match == null) {
-            const last = acc.at(-1);
-            if (last == null) return acc;
+  return srt
+    .split(/\r|\n/)
+    .map((s) => s.trim())
+    .filter((str) => str.length > 0)
+    .map((s) => ({
+      lineStr: s,
+      match: s.match(/(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/),
+    }))
+    .filter(
+      ({ lineStr }, idx, source) =>
+        !(/^\d+$/.test(lineStr) && source[idx + 1]?.match != null),
+    )
+    .reduce(
+      (acc, { lineStr, match }) => {
+        if (match == null) {
+          const last = acc.at(-1);
+          if (last == null) return acc;
 
-            last.text += last.text.length === 0 ? lineStr : `\n${lineStr}`;
-          } else {
-            acc.push({
-              start: srtTimeToSeconds(match[1]),
-              end: srtTimeToSeconds(match[2]),
-              text: '',
-            });
-          }
+          last.text += last.text.length === 0 ? lineStr : `\n${lineStr}`;
+        } else {
+          acc.push({
+            start: srtTimeToSeconds(match[1]),
+            end: srtTimeToSeconds(match[2]),
+            text: '',
+          });
+        }
 
-          return acc;
-        },
-        [] as Array<{
-          start: number;
-          end: number;
-          text: string;
-        }>,
-      )
-  );
+        return acc;
+      },
+      [] as Array<{
+        start: number;
+        end: number;
+        text: string;
+      }>,
+    );
 }

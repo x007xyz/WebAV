@@ -30,6 +30,11 @@ export class VisibleSprite extends BaseSprite {
    */
   visible = true;
 
+  /**
+   * 元素是否可选择
+   */
+  selectable = true;
+
   constructor(clip: IClip) {
     super();
     this.#clip = clip;
@@ -77,6 +82,11 @@ export class VisibleSprite extends BaseSprite {
   }
 
   #lastTime = -1;
+
+  resetLastTime() {
+    this.#lastTime = -1;
+  }
+
   /**
    * 绘制素材指定时刻的图像到 canvas 上下文，并返回对应的音频数据
    * @param time 指定时刻，微秒
@@ -88,7 +98,9 @@ export class VisibleSprite extends BaseSprite {
     this.animate(time);
     super._render(ctx);
     const { w, h } = this.rect;
-    if (this.#lastTime !== time) this.#update(time);
+    // 暂时删除this.#lastTime !== time的判断
+    // if (this.#lastTime !== time) this.#update(time);
+    this.#update(time);
     this.#lastTime = time;
 
     const audio = this.#lastAudio;

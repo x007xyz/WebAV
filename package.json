@@ -30,6 +30,7 @@
   },
   "scripts": {
     "build": "pnpm -F @fly-cut/* run build",
+    "build:dev": "pnpm -F @fly-cut/* run build:dev",
     "ci:test": "pnpm -F @fly-cut/* run ci:test",
     "publish:all": "pnpm publish -r",
     "publish:all:next": "pnpm publish -r --tag next",

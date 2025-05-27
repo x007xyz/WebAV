@@ -113,6 +113,31 @@ export class AudioClip implements IClip {
     );
   }
 
+  // 在 AudioClip 类中添加
+  setVolume(newVolume: number): void {
+    if (newVolume < 0 || newVolume > 1) {
+      throw new Error('Volume must be between 0 and 1');
+    }
+
+    // 计算音量变化比例
+    const volumeRatio = newVolume / this.#opts.volume;
+
+    // 应用到 PCM 数据
+    for (let i = 0; i < this.#chan0Buf.length; i++) {
+      this.#chan0Buf[i] *= volumeRatio;
+    }
+    for (let i = 0; i < this.#chan1Buf.length; i++) {
+      this.#chan1Buf[i] *= volumeRatio;
+    }
+
+    // 更新音量设置
+    this.#opts.volume = newVolume;
+  }
+
+  getVolume(): number {
+    return this.#opts.volume;
+  }
+
   /**
    * 拦截 {@link AudioClip.tick} 方法返回的数据，用于对音频数据二次处理
    * @param time 调用 tick 的时间

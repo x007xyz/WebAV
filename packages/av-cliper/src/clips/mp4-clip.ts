@@ -373,6 +373,165 @@ export class MP4Clip implements IClip {
     return [preClip, postClip] as [this, this];
   }
 
+  async removeSegment(startTime: number, endTime: number): Promise<MP4Clip> {
+    await this.ready;
+
+    if (
+      startTime < 0 ||
+      endTime > this.#meta.duration ||
+      startTime >= endTime
+    ) {
+      throw Error('Invalid time range');
+    }
+
+    // 处理视频和音频样本，删除指定时间段
+    const newVideoSamples = this.#removeVideoSamples(startTime, endTime);
+    const newAudioSamples = this.#removeAudioSamples(startTime, endTime);
+
+    // 创建新的 MP4Clip 实例
+    const newClip = new MP4Clip(
+      {
+        localFile: this.#localFile,
+        videoSamples: newVideoSamples,
+        audioSamples: newAudioSamples,
+        decoderConf: this.#decoderConf,
+        headerBoxPos: this.#headerBoxPos,
+      },
+      this.#opts,
+    );
+
+    await newClip.ready;
+    newClip.tickInterceptor = this.tickInterceptor;
+    return newClip;
+  }
+
+  #removeVideoSamples(startTime: number, endTime: number): ExtMP4Sample[] {
+    if (this.#videoSamples.length === 0) return [];
+
+    const beforeSamples: ExtMP4Sample[] = [];
+    const afterSamples: ExtMP4Sample[] = [];
+
+    let lastBeforeIDRIndex = -1;
+    let firstAfterIDRIndex = -1;
+
+    // 首先找到删除区间前的最后一个 IDR 帧和删除区间后的第一个 IDR 帧
+    for (let i = 0; i < this.#videoSamples.length; i++) {
+      const s = this.#videoSamples[i];
+      if (s.is_idr) {
+        if (s.cts < startTime) {
+          lastBeforeIDRIndex = i;
+        } else if (s.cts >= endTime && firstAfterIDRIndex === -1) {
+          firstAfterIDRIndex = i;
+          break;
+        }
+      }
+    }
+
+    // 如果没有找到合适的 IDR 帧，使用最近的 IDR 帧
+    if (lastBeforeIDRIndex === -1) {
+      // 找到第一个 IDR 帧
+      for (let i = 0; i < this.#videoSamples.length; i++) {
+        if (this.#videoSamples[i].is_idr) {
+          lastBeforeIDRIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (firstAfterIDRIndex === -1) {
+      // 使用最后一个 IDR 帧
+      for (let i = this.#videoSamples.length - 1; i >= 0; i--) {
+        if (this.#videoSamples[i].is_idr) {
+          firstAfterIDRIndex = i;
+          break;
+        }
+      }
+    }
+
+    // 收集删除区间前的样本（从最后一个 IDR 帧开始）
+    if (lastBeforeIDRIndex !== -1) {
+      for (let i = lastBeforeIDRIndex; i < this.#videoSamples.length; i++) {
+        const s = this.#videoSamples[i];
+        if (s.cts >= startTime) break;
+        beforeSamples.push({ ...s });
+      }
+    }
+
+    // 收集删除区间后的样本（从第一个 IDR 帧开始）
+    if (firstAfterIDRIndex !== -1) {
+      const timeOffset = endTime - startTime;
+      for (let i = firstAfterIDRIndex; i < this.#videoSamples.length; i++) {
+        const s = this.#videoSamples[i];
+        afterSamples.push({
+          ...s,
+          cts: s.cts - timeOffset,
+        });
+      }
+    }
+
+    // 合并前后样本
+    const mergedSamples = [...beforeSamples, ...afterSamples];
+
+    // 确保第一个样本是 IDR 帧
+    if (mergedSamples.length > 0 && !mergedSamples[0].is_idr) {
+      this.#log.warn(
+        'First sample is not IDR frame after merging, samples might be corrupted',
+      );
+    }
+
+    return mergedSamples;
+  }
+
+  // 在 MP4Clip 类中添加
+  // 在 MP4Clip 类中添加
+  setVolume(newVolume: number): void {
+    if (newVolume < 0 || newVolume > 1) {
+      throw new Error('Volume must be between 0 and 1');
+    }
+
+    this.#volume = newVolume;
+
+    // 通过 tickInterceptor 动态调整音量，避免重新创建解码器
+    const originalInterceptor = this.tickInterceptor;
+    this.tickInterceptor = async (time, tickRet) => {
+      if (tickRet.audio && this.#volume !== 1) {
+        for (const channel of tickRet.audio) {
+          for (let i = 0; i < channel.length; i++) {
+            channel[i] *= this.#volume;
+          }
+        }
+      }
+      return originalInterceptor(time, tickRet);
+    };
+  }
+
+  getVolume(): number {
+    return this.#volume;
+  }
+
+  #removeAudioSamples(startTime: number, endTime: number): ExtMP4Sample[] {
+    if (this.#audioSamples.length === 0) return [];
+
+    const beforeSamples: ExtMP4Sample[] = [];
+    const afterSamples: ExtMP4Sample[] = [];
+
+    // 分离删除前后的样本
+    for (const s of this.#audioSamples) {
+      if (s.cts < startTime) {
+        beforeSamples.push({ ...s });
+      } else if (s.cts >= endTime) {
+        // 调整删除后样本的时间戳
+        afterSamples.push({
+          ...s,
+          cts: s.cts - (endTime - startTime),
+        });
+      }
+      // startTime <= s.cts < endTime 的样本被删除
+    }
+
+    // 合并前后样本
+    return [...beforeSamples, ...afterSamples];
+  }
   async clone() {
     await this.ready;
     const clip = new MP4Clip(

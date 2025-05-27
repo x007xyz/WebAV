@@ -9,6 +9,11 @@ export interface IPoint {
 }
 
 /**
+ * 锚点（坐标系原点）
+ */
+export interface IAnchor extends IPoint {}
+
+/**
  * 分辨率（尺寸）
  */
 export interface IResolution {

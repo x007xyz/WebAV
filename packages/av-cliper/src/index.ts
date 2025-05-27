@@ -8,6 +8,7 @@ export {
   AudioClip,
   MediaStreamClip,
   EmbedSubtitlesClip,
+  TextClip,
 } from './clips';
 export type { IClip } from './clips';
 export { OffscreenSprite } from './sprite/offscreen-sprite';

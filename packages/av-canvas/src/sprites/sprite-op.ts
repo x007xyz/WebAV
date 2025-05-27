@@ -39,7 +39,8 @@ export function activeSprite(
         .getSprites()
         // 排在后面的层级更高
         .reverse()
-        .find((s) => s.visible && s.rect.checkHit(ofx, ofy)) ?? null;
+        .find((s) => s.visible && s.selectable && s.rect.checkHit(ofx, ofy)) ??
+      null;
   };
 
   cvsEl.addEventListener('pointerdown', onCvsMouseDown);
