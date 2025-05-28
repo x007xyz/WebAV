@@ -94,10 +94,11 @@ export class VisibleSprite extends BaseSprite {
   render(
     ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
     time: number,
+    anchor: { x: number; y: number },
   ): { audio: Float32Array[] } {
     this.animate(time);
-    super._render(ctx);
-    const { w, h } = this.rect;
+    super._render(ctx, anchor);
+    const { w, h, x, y } = this.rect;
     // 暂时删除this.#lastTime !== time的判断
     // if (this.#lastTime !== time) this.#update(time);
     this.#update(time);
@@ -106,7 +107,7 @@ export class VisibleSprite extends BaseSprite {
     const audio = this.#lastAudio;
     this.#lastAudio = [];
     const video = this.#lastVf;
-    if (video != null) ctx.drawImage(video, -w / 2, -h / 2, w, h);
+    if (video != null) ctx.drawImage(video, x, y, w, h);
 
     return { audio };
   }

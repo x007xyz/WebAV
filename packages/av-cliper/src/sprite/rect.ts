@@ -169,6 +169,9 @@ export class Rect implements IRectBaseProps {
    */
   checkHit(tx: number, ty: number): boolean {
     let { angle, center, x, y, w, h } = this;
+
+    tx = tx + w / 2;
+    ty = ty + h / 2;
     // ctrls 的中心点、旋转角度都取自于 master （sprite）
     const cnt = this.#master?.center ?? center;
     const agl = this.#master?.angle ?? angle;

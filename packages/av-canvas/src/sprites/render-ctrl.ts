@@ -25,6 +25,7 @@ export function renderCtrls(
       ctrlsEl,
       cvsRatio,
       rectCtrlsGetter,
+      cvsEl,
     );
   });
 
@@ -39,9 +40,9 @@ export function renderCtrls(
       rectEl.style.display = 'none';
       return;
     }
-    syncCtrlElPos(s, rectEl, ctrlsEl, cvsRatio, rectCtrlsGetter);
+    syncCtrlElPos(s, rectEl, ctrlsEl, cvsRatio, rectCtrlsGetter, cvsEl);
     lastActSprEvtClear = s.on('propsChange', () => {
-      syncCtrlElPos(s, rectEl, ctrlsEl, cvsRatio, rectCtrlsGetter);
+      syncCtrlElPos(s, rectEl, ctrlsEl, cvsRatio, rectCtrlsGetter, cvsEl);
     });
     rectEl.style.display = '';
   });
@@ -94,11 +95,23 @@ function syncCtrlElPos(
   ctrlsEl: Record<TCtrlKey, HTMLElement>,
   cvsRatio: ICvsRatio,
   rectCtrlsGetter: (rect: Rect) => RectCtrls,
+  cvsEl: HTMLCanvasElement,
 ): void {
   const { x, y, w, h, angle } = s.rect;
+
+  // 计算画布中心在容器坐标系中的坐标
+  const cvsCenterXInContainer = (cvsEl.width / 2) * cvsRatio.w;
+  const cvsCenterYInContainer = (cvsEl.height / 2) * cvsRatio.h;
+
+  // VisibleSprite 的 rect.x, rect.y 是其中心点相对于画布中心的坐标。
+  // 计算 VisibleSprite 视觉左上角相对于画布中心的坐标。
+  const visualLeftXInCanvasCenter = x - w / 2;
+  const visualTopYInCanvasCenter = y - h / 2;
+
+  // 将 VisibleSprite 视觉左上角坐标从画布中心坐标系转换到容器左上角坐标系。
   Object.assign(rectEl.style, {
-    left: `${x * cvsRatio.w}px`,
-    top: `${y * cvsRatio.h}px`,
+    left: `${cvsCenterXInContainer + visualLeftXInCanvasCenter * cvsRatio.w}px`,
+    top: `${cvsCenterYInContainer + visualTopYInCanvasCenter * cvsRatio.h}px`,
     width: `${w * cvsRatio.w}px`,
     height: `${h * cvsRatio.h}px`,
     rotate: `${angle}rad`,

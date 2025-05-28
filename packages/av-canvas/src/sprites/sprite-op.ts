@@ -27,10 +27,14 @@ export function activeSprite(
     const { offsetX, offsetY } = evt;
     const ofx = offsetX / cvsRatio.w;
     const ofy = offsetY / cvsRatio.h;
+    // 转换为相对于画布中心的坐标
+    const cx = ofx - cvsEl.width / 2;
+    const cy = ofy - cvsEl.height / 2;
+
     if (sprMng.activeSprite != null) {
       const [ctrlKey] =
         (Object.entries(rectCtrlsGetter(sprMng.activeSprite.rect)).find(
-          ([, rect]) => rect.checkHit(ofx, ofy),
+          ([, rect]) => rect.checkHit(cx, cy),
         ) as [TCtrlKey, Rect]) ?? [];
       if (ctrlKey != null) return;
     }
@@ -39,7 +43,7 @@ export function activeSprite(
         .getSprites()
         // 排在后面的层级更高
         .reverse()
-        .find((s) => s.visible && s.selectable && s.rect.checkHit(ofx, ofy)) ??
+        .find((s) => s.visible && s.selectable && s.rect.checkHit(cx, cy)) ??
       null;
   };
 
@@ -350,9 +354,13 @@ function hitRectCtrls({
   // 将鼠标点击偏移坐标映射成 canvas 坐，
   const ofx = offsetX / cvsRatio.w;
   const ofy = offsetY / cvsRatio.h;
+  // 转换为相对于画布中心的坐标
+  const cx = ofx - cvsEl.width / 2;
+  const cy = ofy - cvsEl.height / 2;
+
   const [k] =
     (Object.entries(rectCtrlsGetter(rect)).find(([, rect]) =>
-      rect.checkHit(ofx, ofy),
+      rect.checkHit(cx, cy),
     ) as [TCtrlKey, Rect]) ?? [];
 
   if (k == null) return false;
@@ -420,18 +428,43 @@ function updateRectWithSafeMargin(
   value: Partial<Pick<Rect, 'x' | 'y' | 'w' | 'h'>>,
 ) {
   const newState = { x: rect.x, y: rect.y, w: rect.w, h: rect.h, ...value };
-  const safeWidth = cvsEl.width * 0.05;
-  const safeHeight = cvsEl.height * 0.05;
-  if (newState.x < -newState.w + safeWidth) {
-    newState.x = -newState.w + safeWidth;
-  } else if (newState.x > cvsEl.width - safeWidth) {
-    newState.x = cvsEl.width - safeWidth;
+  const safeMarginRatio = 0.05; // Keep 5% of the sprite visible if it goes off-screen
+  const minVisibleWidth = newState.w * safeMarginRatio;
+  const minVisibleHeight = newState.h * safeMarginRatio;
+
+  // Canvas boundaries in the center-origin coordinate system
+  const canvasLeft = -cvsEl.width / 2;
+  const canvasRight = cvsEl.width / 2;
+  const canvasTop = -cvsEl.height / 2;
+  const canvasBottom = cvsEl.height / 2;
+
+  // Calculate the desired visible part if the sprite was fully on screen
+  // For simplicity, let's ensure at least a small fixed part (e.g. 10px) or minVisibleWidth/Height is visible.
+  // Or, more robustly, the safeX and safeY from the original code represented the part of the *canvas* that should remain clear.
+  // Let's re-interpret safeWidth/safeHeight as the minimum portion of the *sprite* that must remain on canvas.
+
+  // Min x for rect.x (center of sprite) such that right edge of sprite is at canvasLeft + minVisibleWidth
+  const minX = canvasLeft - newState.w / 2 + minVisibleWidth;
+  // Max x for rect.x (center of sprite) such that left edge of sprite is at canvasRight - minVisibleWidth
+  const maxX = canvasRight + newState.w / 2 - minVisibleWidth;
+
+  // Min y for rect.y (center of sprite) such that bottom edge of sprite is at canvasTop + minVisibleHeight
+  const minY = canvasTop - newState.h / 2 + minVisibleHeight;
+  // Max y for rect.y (center of sprite) such that top edge of sprite is at canvasBottom - minVisibleHeight
+  const maxY = canvasBottom + newState.h / 2 - minVisibleHeight;
+
+  if (newState.x < minX) {
+    newState.x = minX;
+  } else if (newState.x > maxX) {
+    newState.x = maxX;
   }
-  if (newState.y < -newState.h + safeHeight) {
-    newState.y = -newState.h + safeHeight;
-  } else if (newState.y > cvsEl.height - safeHeight) {
-    newState.y = cvsEl.height - safeHeight;
+
+  if (newState.y < minY) {
+    newState.y = minY;
+  } else if (newState.y > maxY) {
+    newState.y = maxY;
   }
+
   rect.x = newState.x;
   rect.y = newState.y;
   rect.w = newState.w;
@@ -583,8 +616,12 @@ export function dynamicCusor(
     // 将鼠标点击偏移坐标映射成 canvas 坐，
     const ofx = offsetX / cvsRatio.w;
     const ofy = offsetY / cvsRatio.h;
+    // 转换为相对于画布中心的坐标
+    const cx = ofx - cvsEl.width / 2;
+    const cy = ofy - cvsEl.height / 2;
+
     // 直接选中 sprite 时，需要改变鼠标样式为 move
-    if (actSpr?.rect.checkHit(ofx, ofy) === true && cvsStyle.cursor === '') {
+    if (actSpr?.rect.checkHit(cx, cy) === true && cvsStyle.cursor === '') {
       cvsStyle.cursor = 'move';
     }
   };
@@ -611,9 +648,13 @@ export function dynamicCusor(
     const { offsetX, offsetY } = evt;
     const ofx = offsetX / cvsRatio.w;
     const ofy = offsetY / cvsRatio.h;
+    // 转换为相对于画布中心的坐标
+    const cx = ofx - cvsEl.width / 2;
+    const cy = ofy - cvsEl.height / 2;
+
     const [ctrlKey] =
       (Object.entries(rectCtrlsGetter(actSpr.rect)).find(([, rect]) =>
-        rect.checkHit(ofx, ofy),
+        rect.checkHit(cx, cy),
       ) as [TCtrlKey, Rect]) ?? [];
 
     if (ctrlKey != null) {
@@ -632,7 +673,7 @@ export function dynamicCusor(
       cvsStyle.cursor = curStyles[idx];
       return;
     }
-    if (actSpr.rect.checkHit(ofx, ofy)) {
+    if (actSpr.rect.checkHit(cx, cy)) {
       cvsStyle.cursor = 'move';
       return;
     }

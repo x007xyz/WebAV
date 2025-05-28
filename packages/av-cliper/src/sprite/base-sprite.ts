@@ -102,9 +102,10 @@ export abstract class BaseSprite {
 
   protected _render(
     ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    anchor: { x: number; y: number },
   ): void {
     const {
-      rect: { center, angle },
+      rect: { w, h, center, angle },
     } = this;
     ctx.setTransform(
       // 水平 缩放、倾斜
@@ -114,8 +115,8 @@ export abstract class BaseSprite {
       0,
       this.flip === 'vertical' ? -1 : 1,
       // 坐标原点偏移 x y
-      center.x,
-      center.y,
+      anchor.x - w / 2,
+      anchor.y - h / 2,
     );
     // 任意方向翻转，旋转角度转为负值，才能与控制点同步
     ctx.rotate((this.flip == null ? 1 : -1) * angle);

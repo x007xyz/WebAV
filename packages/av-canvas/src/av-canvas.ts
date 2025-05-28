@@ -150,15 +150,16 @@ export class AVCanvas {
         rectCtrlsGetter,
       ),
       renderCtrls(container, this.#cvsEl, this.#spriteManager, rectCtrlsGetter),
-      this.#spriteManager.on(ESpriteManagerEvt.AddSprite, (s) => {
-        const { rect } = s;
-        // 默认居中
-        if (rect.x === 0 && rect.y === 0) {
-          // 考虑锚点的情况
-          rect.x = (this.#cvsEl.width - rect.w) / 2;
-          rect.y = (this.#cvsEl.height - rect.h) / 2;
-        }
-      }),
+      // 因为默认为中心对齐，所以可以不用考虑居中的问题，0，0就是居中
+      // this.#spriteManager.on(ESpriteManagerEvt.AddSprite, (s) => {
+      //   const { rect } = s;
+      //   // 默认居中
+      //   if (rect.x === 0 && rect.y === 0) {
+      //     // 考虑锚点的情况
+      //     rect.x = (this.#cvsEl.width - rect.w) / 2;
+      //     rect.y = (this.#cvsEl.height - rect.h) / 2;
+      //   }
+      // }),
       EventTool.forwardEvent(this.#spriteManager, this.#evtTool, [
         ESpriteManagerEvt.ActiveSpriteChange,
       ]),
@@ -271,12 +272,12 @@ export class AVCanvas {
       cvsCtx.save();
 
       // 应用锚点变换
-      if (this.#anchor.x !== 0 || this.#anchor.y !== 0) {
-        // 保存当前的变换矩阵
-        cvsCtx.translate(this.#anchor.x, this.#anchor.y);
-      }
+      // if (this.#anchor.x !== 0 || this.#anchor.y !== 0) {
+      //   // 保存当前的变换矩阵
+      //   cvsCtx.translate(this.#anchor.x, this.#anchor.y);
+      // }
 
-      const { audio } = s.render(cvsCtx, ts - s.time.offset);
+      const { audio } = s.render(cvsCtx, ts - s.time.offset, this.#anchor);
       cvsCtx.restore();
 
       ctxDestAudioData.push(audio);
