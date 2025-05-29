@@ -1,5 +1,16 @@
 # @webav/av-cliper
 
+## 1.3.0
+
+### Minor Changes
+
+- 功能升级
+
+### Patch Changes
+
+- Updated dependencies
+  - @fly-cut/internal-utils@1.3.0
+
 ## 1.2.0
 
 ### Minor Changes
