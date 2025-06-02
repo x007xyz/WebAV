@@ -8,27 +8,29 @@ English | [中文](./README_CN.md)
 
 WebAV is an SDK for **creating/editing** video files on the web platform, built on WebCodecs.
 
+_Visit [WebAV Pro](https://github.com/WebAV-Tech/WebAV-Pro) for more advanced features. You can purchase Pro licenses or request custom outsourcing if needed, which also helps support the ongoing maintenance of this project._
+
 ### Features
 
 - Cross-platform: Supports running on Edge and Chrome browsers, as well as in Electron.
 - Zero Cost: Fully utilizes client-side computation, eliminating server costs.
 - Privacy and Security: No user data is uploaded.
-- High Performance: 10 to 20 times faster than ffmpeg.wasm.
+- High Performance: 20x faster than ffmpeg.wasm. For a comparison with native performance, see [WebCodecs Performance Benchmark](https://hughfenghen.github.io/posts/2024/07/27/webcodecs-performance-benchmark/).
 - Easy to Extend: Developer-friendly for web developers, easily integrates with Canvas and WebAudio for custom functionality.
-- Small Size: Approximately 50KB (MINIFIED + GZIPPED, without tree-shaking).
+- Small Size: Approximately 50KB (MINIFIED + GZIPPED, before tree-shaking).
 
 _Compatible with Chrome 102+_
 
 ### Use Cases
 
-- Batch audio and video file processing, such as adding watermarks, dubbing, and embedding subtitles
-- Building audio and video related products, such as video editing, live streaming, and video animation production
+- Batch audio and video file processing, such as adding watermarks, dubbing, embedding subtitles
+- Building audio and video related products, such as video editing, live streaming, video animation production
 
 ## DEMO
 
-The WebAV project offers a variety of quick DEMO experiences. Visit the [DEMO Homepage](https://webav-tech.github.io/WebAV/demo) to check the compatibility of your current device.
+The WebAV project offers a variety of quick DEMO experiences. Visit the [DEMO Homepage](https://webav-tech.github.io/WebAV/demo) to check the compatibility of your current device, or click here to experience [Pro advanced features online](https://webav-tech.github.io/WebAV-Pro/demo).
 
-_Note: The test video resources are hosted on GitHub pages, so starting a DEMO may require some network loading time._
+_Tip: The test video resources are hosted on GitHub Pages. Starting a DEMO may require some network loading time._
 
 Here are some feature demos you might be interested in:
 
@@ -45,9 +47,9 @@ Here are some feature demos you might be interested in:
 
 Here is a brief introduction to the core API of `av-cliper`:
 
-- `IClip` abstracts audio and video materials, parses audio and video, image, and subtitle resources, and provides data to other modules.
-- `Sprite<IClip>` attaches spatial and temporal attributes to materials, allowing control over the spatial position and time offset of the video in the material, achieving multi-material collaboration, animation, and other functions.
-- `Combinator` can add multiple Sprites, and based on their positions, layers, and time offsets, synthesize and output as a video file.
+- `IClip` is an abstraction for audio/video materials. It parses audio/video, image, and subtitle resources, and provides data for other modules.
+- `Sprite<IClip>` attaches spatial and temporal attributes to materials, allowing you to control the spatial position and time offset of the video in the material. This enables multi-material collaboration, animation, and more.
+- `Combinator` can add multiple Sprites and, based on their positions, layers, and time offsets, synthesize and output a video file.
 
 <details>
 <summary style="cursor: pointer;"> Code Demo: Add a Moving Semi-transparent Watermark to a Video </summary>

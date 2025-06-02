@@ -8,6 +8,8 @@
 
 WebAV 是 Web 平台上**创建/编辑**视频文件的 SDK，基于 WebCodecs 构建。
 
+_访问 [WebAV Pro](https://github.com/WebAV-Tech/WebAV-Pro) 了解更多高级功能，若有需要您可以购买 Pro 版授权或外包定制化需求， 同时也能帮助作者更好地维护当前项目。_
+
 ### 优势
 
 - 跨平台：支持在 Edge、Chrome 浏览器，以及 Electron 中运行
@@ -26,7 +28,7 @@ _兼容 chrome 102+_
 
 ## DEMO
 
-WebAV 项目有丰富的可快速体验的 DEMO，可以访问 [DEMO 首页](https://webav-tech.github.io/WebAV/demo)检查当前设备的兼容性。
+WebAV 项目有丰富的可快速体验的 DEMO，可以访问 [DEMO 首页](https://webav-tech.github.io/WebAV/demo)检查当前设备的兼容性，点击这里在线体验 [Pro 高级功能](https://webav-tech.github.io/WebAV-Pro/demo)。
 
 _提示：测试用的视频资源托管在 github pages，启动 DEMO 可能需要一些网络加载时间_
 
