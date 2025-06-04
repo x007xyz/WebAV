@@ -299,8 +299,27 @@ function App() {
           const spr = new VisibleSprite(
             new ImgClip(
               await renderTxt2ImgBitmap(
-                '示例文字',
-                'font-size: 80px; color: red;',
+                '示例\n文字',
+                'font-size: 80px; color: red; text-shadow: 1px 1px 5px #00f; font-family: muyaoruanbi;',
+                {
+                  font: {
+                    name: 'muyaoruanbi',
+                    url: './muyaoruanbi.ttf',
+                  },
+                  onCreated: (el: HTMLElement) => {
+                    const bgtxt = el.cloneNode(true) as HTMLElement;
+                    bgtxt.style.cssText = `
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        -webkit-text-stroke: 8px #fff;
+                        z-index: -1;
+                        margin: 0;
+                        font-family: muyaoruanbi;
+                      `;
+                    el.appendChild(bgtxt);
+                  },
+                },
               ),
             ),
           );
