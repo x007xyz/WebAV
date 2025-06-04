@@ -118,8 +118,23 @@ export class TextClip implements IClip {
     const { fontSize, fontFamily, fontWeight, fontStyle, textAlign } =
       this.#opts.style;
 
-    // 设置字体
-    const fontString = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+    const fontStyleEmuns = ['normal', 'italic', 'oblique'];
+    const fontWeightEmuns = [
+      'normal',
+      'bold',
+      'bolder',
+      'lighter',
+      '100',
+      '200',
+      '300',
+      '400',
+      '500',
+      '600',
+      '700',
+      '800',
+      '900',
+    ];
+    const fontString = `${fontStyleEmuns.includes(fontStyle) ? fontStyle : 'normal'} ${fontWeightEmuns.includes(fontWeight) ? fontWeight : 'normal'} ${fontSize}px ${fontFamily}`;
     ctx.font = fontString;
     ctx.textAlign = textAlign;
     ctx.textBaseline = 'middle';

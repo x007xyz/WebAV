@@ -144,7 +144,23 @@ export class EmbedSubtitlesClip implements IClip {
       textAlign,
       letterSpacing,
     } = this.#opts.style;
-    const fontString = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+    const fontStyleEmuns = ['normal', 'italic', 'oblique'];
+    const fontWeightEmuns = [
+      'normal',
+      'bold',
+      'bolder',
+      'lighter',
+      '100',
+      '200',
+      '300',
+      '400',
+      '500',
+      '600',
+      '700',
+      '800',
+      '900',
+    ];
+    const fontString = `${fontStyleEmuns.includes(fontStyle) ? fontStyle : 'normal'} ${fontWeightEmuns.includes(fontWeight) ? fontWeight : 'normal'} ${fontSize}px ${fontFamily}`;
     this.#ctx.font = fontString;
     this.#ctx.textAlign = textAlign;
     this.#ctx.textBaseline = 'middle';

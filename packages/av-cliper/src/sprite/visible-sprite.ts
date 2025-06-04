@@ -87,6 +87,115 @@ export class VisibleSprite extends BaseSprite {
     this.#lastTime = -1;
   }
 
+  // 在 VisibleSprite 类中添加
+  #aspectRatio: { width: number; height: number } | null = null;
+  #originalDimensions: { width: number; height: number } | null = null;
+  // 存储裁剪区域的信息
+  #cropRegion: {
+    sx: number;
+    sy: number;
+    sWidth: number;
+    sHeight: number;
+  } | null = null;
+
+  // 在 VisibleSprite 类中修改
+  /**
+   * 设置裁剪为固定宽高比，或设置为空使用原始比例
+   * @param width 宽度比例，传入 null 或 undefined 使用原始比例
+   * @param height 高度比例，传入 null 或 undefined 使用原始比例
+   */
+  setAspectRatio(width: number | null, height: number | null): void {
+    // 如果任一参数为空，则清除宽高比设置
+    if (width == null || height == null) {
+      this.#aspectRatio = null;
+      this.#cropRegion = null;
+
+      // 恢复原始尺寸（如果有记录）
+      if (this.#originalDimensions) {
+        this.rect.w = this.#originalDimensions.width;
+        this.rect.h = this.#originalDimensions.height;
+      }
+      return;
+    }
+
+    if (width <= 0 || height <= 0) {
+      throw new Error('Aspect ratio values must be positive');
+    }
+
+    // 保存原始尺寸（如果未保存）
+    if (!this.#originalDimensions) {
+      this.#originalDimensions = {
+        width: this.rect.w,
+        height: this.rect.h,
+      };
+    }
+
+    this.#aspectRatio = { width, height };
+
+    // 计算裁剪区域
+    this.#calculateCropRegion();
+
+    // 根据新的宽高比调整当前尺寸
+    this.#adjustDimensionsToAspectRatio();
+  }
+
+  /**
+   * 计算基于宽高比的裁剪区域
+   */
+  #calculateCropRegion(): void {
+    if (!this.#aspectRatio || !this.#clip.meta) return;
+
+    const sourceWidth = this.#clip.meta.width;
+    const sourceHeight = this.#clip.meta.height;
+    const targetRatio = this.#aspectRatio.width / this.#aspectRatio.height;
+    const sourceRatio = sourceWidth / sourceHeight;
+
+    let cropWidth, cropHeight, sx, sy;
+
+    if (sourceRatio > targetRatio) {
+      // 源视频更宽，需要裁剪左右两边
+      cropHeight = sourceHeight;
+      cropWidth = sourceHeight * targetRatio;
+      sx = (sourceWidth - cropWidth) / 2;
+      sy = 0;
+    } else {
+      // 源视频更高，需要裁剪上下两边
+      cropWidth = sourceWidth;
+      cropHeight = sourceWidth / targetRatio;
+      sx = 0;
+      sy = (sourceHeight - cropHeight) / 2;
+    }
+
+    this.#cropRegion = {
+      sx,
+      sy,
+      sWidth: cropWidth,
+      sHeight: cropHeight,
+    };
+  }
+
+  /**
+   * 根据设置的宽高比调整尺寸
+   */
+  #adjustDimensionsToAspectRatio(): void {
+    if (!this.#aspectRatio || !this.#originalDimensions) return;
+
+    const targetRatio = this.#aspectRatio.width / this.#aspectRatio.height;
+
+    // 保持与原始尺寸相近的面积，但调整为目标宽高比
+    const originalArea =
+      this.#originalDimensions.width * this.#originalDimensions.height;
+    const newHeight = Math.sqrt(originalArea / targetRatio);
+    const newWidth = newHeight * targetRatio;
+
+    this.rect.w = newWidth;
+    this.rect.h = newHeight;
+  }
+
+  getAspectRatio(): { width: number; height: number } | null {
+    return this.#aspectRatio ? { ...this.#aspectRatio } : null;
+  }
+
   /**
    * 绘制素材指定时刻的图像到 canvas 上下文，并返回对应的音频数据
    * @param time 指定时刻，微秒
@@ -107,7 +216,24 @@ export class VisibleSprite extends BaseSprite {
     const audio = this.#lastAudio;
     this.#lastAudio = [];
     const video = this.#lastVf;
-    if (video != null) ctx.drawImage(video, x, y, w, h);
+    if (video != null) {
+      if (this.#cropRegion) {
+        const { sx, sy, sWidth, sHeight } = this.#cropRegion;
+        ctx.drawImage(
+          video,
+          sx,
+          sy,
+          sWidth,
+          sHeight, // 源区域
+          x,
+          y,
+          w,
+          h,
+        );
+      } else {
+        ctx.drawImage(video, x, y, w, h);
+      }
+    }
 
     return { audio };
   }
@@ -116,6 +242,12 @@ export class VisibleSprite extends BaseSprite {
     super.copyStateTo(target);
     if (target instanceof VisibleSprite) {
       target.visible = this.visible;
+      if (this.#aspectRatio) {
+        target.setAspectRatio(
+          this.#aspectRatio.width,
+          this.#aspectRatio.height,
+        );
+      }
     }
   }
 
