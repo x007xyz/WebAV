@@ -1,5 +1,14 @@
 # @webav/av-canvas
 
+## 1.1.5
+
+### Patch Changes
+
+- cdf8eb1: feat: add custom font support for text-to-image rendering #415
+- Updated dependencies [cdf8eb1]
+  - @webav/av-cliper@1.1.5
+  - @webav/internal-utils@1.1.5
+
 ## 1.1.4
 
 ### Patch Changes

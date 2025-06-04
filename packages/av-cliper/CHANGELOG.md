@@ -1,5 +1,12 @@
 # @webav/av-cliper
 
+## 1.1.5
+
+### Patch Changes
+
+- cdf8eb1: feat: add custom font support for text-to-image rendering #415
+  - @webav/internal-utils@1.1.5
+
 ## 1.1.4
 
 ### Patch Changes
