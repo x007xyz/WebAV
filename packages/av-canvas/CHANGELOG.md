@@ -1,5 +1,17 @@
 # @webav/av-canvas
 
+## 1.4.0
+
+### Minor Changes
+
+- e8094c5: 添加裁剪功能
+
+### Patch Changes
+
+- Updated dependencies [e8094c5]
+  - @fly-cut/internal-utils@1.4.0
+  - @fly-cut/av-cliper@1.4.0
+
 ## 1.3.0
 
 ### Minor Changes
