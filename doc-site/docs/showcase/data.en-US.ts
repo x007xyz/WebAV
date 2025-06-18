@@ -10,6 +10,14 @@ export default {
       link: 'https://github.com/WebAV-Tech/WebAV-Pro',
     },
     {
+      name: '线索兔矩阵系统',
+      cover:
+        'https://github.com/WebAV-Tech/WebAV/blob/main/doc-site/public/img/xiansuotu.png?raw=true',
+      description:
+        'Based on WebAV Pro, a video editing tool for businesses and merchants to quickly edit videos.',
+      link: 'https://www.xiansuotu.com',
+    },
+    {
       name: 'Melody Canvas',
       cover:
         'https://raw.githubusercontent.com/RylanBot/melody-canvas/refs/heads/main/public/image/preview.png',
