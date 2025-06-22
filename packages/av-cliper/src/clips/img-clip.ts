@@ -1,5 +1,5 @@
-import { decodeImg } from '../av-utils';
 import { Log } from '@webav/internal-utils';
+import { decodeImg } from '../av-utils';
 import { IClip } from './iclip';
 
 type AnimateImgType = 'avif' | 'webp' | 'png' | 'gif';
@@ -179,7 +179,9 @@ export class ImgClip implements IClip {
       this.#img == null
         ? this.#frames.map((vf) => vf.clone())
         : await createImageBitmap(this.#img);
-    return new ImgClip(data) as this;
+    const newClip = new ImgClip(data) as this;
+    newClip.tickInterceptor = this.tickInterceptor;
+    return newClip;
   }
 
   destroy(): void {
