@@ -1,5 +1,12 @@
 # @webav/av-cliper
 
+## 1.1.6
+
+### Patch Changes
+
+- 0adc360: fix: preserve tickInterceptor when cloning ImgClip instance
+  - @webav/internal-utils@1.1.6
+
 ## 1.1.5
 
 ### Patch Changes
