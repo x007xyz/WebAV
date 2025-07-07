@@ -19,8 +19,8 @@ Check out the [DEMO on removing green screen backgrounds](https://webav-tech.git
 
 The `tickInterceptor` can also process audio data, enabling real-time voice changing, speed adjustment, vocal enhancement, and more.
 
-## Custom Assets
+## Custom IClip
 
-If you want to combine **images and audio data** from third-party sources (canvas, pixi.js) or programmatically generated content into a video file, or apply complex control logic to existing assets, you can use custom assets to achieve this.
+If you want to combine **images and audio data** from third-party sources (canvas, pixi.js) or programmatically generated content into a video file, or apply complex control logic to existing assets, you can use Custom IClip to achieve this.
 
 The official [DEMO on merging programmatically generated countdown images from canvas into a video](https://webav-tech.github.io/WebAV/demo/2_6-custom-clip) explains how to use this functionality.

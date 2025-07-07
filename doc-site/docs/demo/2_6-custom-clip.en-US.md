@@ -6,7 +6,7 @@ group:
 order: 6
 ---
 
-# Custom Assets
+# Custom IClip
 
 canvas was used to implement a countdown Clip to quickly generate video files.
 
