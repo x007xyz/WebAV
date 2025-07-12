@@ -1468,3 +1468,39 @@ function memoryUsageInfo() {
     return {};
   }
 }
+
+if (import.meta.vitest) {
+  const { it, expect } = import.meta.vitest;
+
+  it('normalizeTimescale should compatible with anomalous data', () => {
+    // 视频容器数据异常时，直接使用容器的信息
+    // 找不到 IDR 帧时，直接信任容器的 offset、size
+    const s: MP4Sample = {
+      offset: 48,
+      size: 1000,
+      cts: 0,
+      dts: 0,
+      duration: 1e6,
+      timescale: 1000,
+      is_sync: true,
+      deleted: false,
+      // 异常的数据，offset = 48 时，并非 idr 帧，且 nalu 长度取值错误
+      data: new Uint8Array([
+        0, 0, 0, 21, 103, 100, 0, 40, 172, 43, 32, 15, 0, 68, 216, 8, 128, 0, 1,
+        244, 0, 0, 93, 192, 66, 0, 0, 0, 4, 104, 235, 143, 44, 0, 1, 134, 130,
+        101, 184, 4, 127, 135, 242, 7, 227, 27, 39, 154, 66, 5, 153, 27, 242,
+        78, 0, 168, 62, 16, 51, 168, 150, 136, 69, 7, 149, 83, 39, 27, 153, 130,
+        214, 70, 144, 194, 191, 167, 74, 7, 11, 97, 224, 27, 193, 2, 122, 234,
+        71, 95, 7, 192, 199, 28, 181, 215, 12, 201, 182, 43, 105, 91,
+      ]),
+      track_id: 1,
+      // @ts-ignore
+      description: { type: 'avc1' },
+      is_rap: false,
+    };
+    const normalized = normalizeTimescale(s, 0, 'video');
+    expect(normalized.offset).toBe(48);
+    expect(normalized.size).toBe(1000);
+    expect(normalized.is_sync).toBe(normalized.is_idr);
+  });
+}
