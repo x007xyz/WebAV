@@ -17,14 +17,29 @@ export default defineConfig({
     },
   },
   test: {
+    includeSource: ['src/**/*.{ts,tsx}'],
     browser: {
       provider: 'webdriverio',
       enabled: true,
-      name: 'chrome', // browser name is required
       headless: true,
-      providerOptions: {
-        browserVersion: 'stable',
-      },
+      // 配置浏览器测试的 API 服务器端口
+      api: 5055,
+      instances: [
+        {
+          name: 'chrome-tests',
+          browser: 'chrome',
+          // 添加 WebDriverIO capabilities 来启用 WebGL 支持
+          capabilities: {
+            browserName: 'chrome',
+            'goog:chromeOptions': {
+              args: [
+                // WebGL 相关参数
+                '--enable-unsafe-webgpu',
+              ],
+            },
+          },
+        },
+      ],
     },
   },
 });

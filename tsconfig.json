@@ -3,6 +3,8 @@
     "types": [
       "@types/dom-mediacapture-transform",
       "@types/dom-webcodecs",
+      "vitest/importMeta",
+      "@vitest/browser/providers/webdriverio",
       "@types/wicg-file-system-access"
     ],
     "target": "ESNext",
