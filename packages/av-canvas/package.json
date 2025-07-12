@@ -31,8 +31,8 @@
     "ci:test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "build": "vite build",
-    "build:api": "typedoc src/index.ts --out ../../doc-site/public/_api/av-canvas",
-    "build:api:watch": "typedoc src/index.ts --out ../../doc-site/public/_api/av-canvas --watch",
+    "build:api": "typedoc src/index.ts --out ../../doc-site/public/_api/av-canvas --skipErrorChecking --exclude '**/demo/**'",
+    "build:api:watch": "typedoc src/index.ts --out ../../doc-site/public/_api/av-canvas --watch --skipErrorChecking --exclude '**/demo/**'",
     "prepublishOnly": "pnpm build",
     "preview": "vite preview"
   },

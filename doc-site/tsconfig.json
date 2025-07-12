@@ -3,6 +3,8 @@
   "compilerOptions": {
     "types": [
       "node",
+      "vitest/importMeta",
+      "@vitest/browser/providers/webdriverio",
       "@types/dom-mediacapture-transform",
       "@types/dom-webcodecs",
       "@types/wicg-file-system-access"

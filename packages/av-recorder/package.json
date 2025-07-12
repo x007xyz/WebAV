@@ -31,8 +31,8 @@
     "test:coverage": "vitest run --coverage",
     "build": "vite build",
     "build:dev": "vite build --watch",
-    "build:api": "typedoc src/av-recorder.ts --out ../../doc-site/public/_api/av-recorder",
-    "build:api:watch": "typedoc src/av-recorder.ts --out ../../doc-site/public/_api/av-recorder --watch",
+    "build:api": "typedoc src/av-recorder.ts --out ../../doc-site/public/_api/av-recorder --skipErrorChecking --exclude '**/demo/**'",
+    "build:api:watch": "typedoc src/av-recorder.ts --out ../../doc-site/public/_api/av-recorder --watch --skipErrorChecking --exclude '**/demo/**'",
     "prepublishOnly": "pnpm build"
   },
   "files": [
