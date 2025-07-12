@@ -1,12 +1,12 @@
-import { MP4Info, MP4Sample } from '@webav/mp4box.js';
-import { audioResample, extractPCM4AudioData, sleep } from '../av-utils';
 import { Log } from '@webav/internal-utils';
+import { MP4Info, MP4Sample } from '@webav/mp4box.js';
+import { file, tmpfile, write } from 'opfs-tools';
+import { audioResample, extractPCM4AudioData, sleep } from '../av-utils';
 import {
   extractFileConfig,
   quickParseMP4File,
 } from '../mp4-utils/mp4box-utils';
 import { DEFAULT_AUDIO_CONF, IClip } from './iclip';
-import { file, tmpfile, write } from 'opfs-tools';
 
 let CLIP_ID = 0;
 
@@ -588,38 +588,40 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: MP4ClipOpts = {}) {
     decoderConf,
     headerBoxPos,
   };
+}
 
-  function normalizeTimescale(
-    s: MP4Sample,
-    delta = 0,
-    sampleType: 'video' | 'audio',
-  ) {
-    // todo: perf 丢弃多余字段，小尺寸对象性能更好
-    const idrOffset =
-      sampleType === 'video' && s.is_sync
-        ? idrNALUOffset(s.data, s.description.type)
-        : -1;
-    let offset = s.offset;
-    let size = s.size;
-    if (idrOffset >= 0) {
-      // 当 IDR 帧前面携带 SEI 数据可能导致解码失败
-      // 所以此处通过控制 offset、size 字段 跳过 SEI 数据
-      offset += idrOffset;
-      size -= idrOffset;
-    }
-    return {
-      ...s,
-      is_idr: idrOffset >= 0,
-      offset,
-      size,
-      cts: ((s.cts - delta) / s.timescale) * 1e6,
-      dts: ((s.dts - delta) / s.timescale) * 1e6,
-      duration: (s.duration / s.timescale) * 1e6,
-      timescale: 1e6,
-      // 音频数据量可控，直接保存在内存中
-      data: sampleType === 'video' ? null : s.data,
-    };
+function normalizeTimescale(
+  s: MP4Sample,
+  delta = 0,
+  sampleType: 'video' | 'audio',
+) {
+  // todo: perf 丢弃多余字段，小尺寸对象性能更好
+  let offset = s.offset;
+  const is_idr = sampleType === 'video' && s.is_sync;
+  const idrOffset = is_idr
+    ? idrNALUOffset(s.data, s.description.type, offset)
+    : -1;
+
+  let size = s.size;
+  if (idrOffset >= 0) {
+    // 当 IDR 帧前面包含非图像帧数据（如 SEI），可能导致解码失败
+    // 所以此处通过控制 offset、size 字段 跳过非图像帧数据
+    offset = idrOffset;
+    size -= idrOffset - offset;
   }
+
+  return {
+    ...s,
+    is_idr,
+    offset,
+    size,
+    cts: ((s.cts - delta) / s.timescale) * 1e6,
+    dts: ((s.dts - delta) / s.timescale) * 1e6,
+    duration: (s.duration / s.timescale) * 1e6,
+    timescale: 1e6,
+    // 音频数据量可控，直接保存在内存中
+    data: sampleType === 'video' ? null : s.data,
+  };
 }
 
 class VideoFrameFinder {
@@ -1335,11 +1337,12 @@ function decodeGoP(
 function idrNALUOffset(
   u8Arr: Uint8Array,
   type: MP4Sample['description']['type'],
+  startOffset: number,
 ) {
   if (type !== 'avc1' && type !== 'hvc1') return 0;
 
   const dv = new DataView(u8Arr.buffer);
-  let i = 0;
+  let i = startOffset;
   for (; i < u8Arr.byteLength - 4; ) {
     if (type === 'avc1' && (dv.getUint8(i + 4) & 0x1f) === 5) {
       return i;
