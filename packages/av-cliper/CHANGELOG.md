@@ -1,5 +1,12 @@
 # @webav/av-cliper
 
+## 1.1.7
+
+### Patch Changes
+
+- 013e45c: fix: mp4clip compatible with anomalous data #424
+  - @webav/internal-utils@1.1.7
+
 ## 1.1.6
 
 ### Patch Changes
