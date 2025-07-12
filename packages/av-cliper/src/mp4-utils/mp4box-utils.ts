@@ -9,8 +9,8 @@ import mp4box, {
   TrakBoxParser,
   VideoTrackOpts,
 } from '@webav/mp4box.js';
-import { DEFAULT_AUDIO_CONF } from '../clips';
 import { file } from 'opfs-tools';
+import { DEFAULT_AUDIO_CONF } from '../clips';
 
 export function extractFileConfig(file: MP4File, info: MP4Info) {
   const vTrack = info.videoTracks[0];
@@ -43,7 +43,7 @@ export function extractFileConfig(file: MP4File, info: MP4Info) {
       codec: vTrack.codec,
       codedHeight: vTrack.video.height,
       codedWidth: vTrack.video.width,
-      description: videoDesc,
+      description: videoDesc as ArrayBuffer,
     };
   }
 

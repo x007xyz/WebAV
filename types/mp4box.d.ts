@@ -269,7 +269,11 @@ declare module '@webav/mp4box.js' {
 
     add: (name: string) => BoxParser;
     addTrack: (opts: VideoTrackOpts | AudioTrackOpts) => number;
-    addSample: (trackId: number, buf: ArrayBuffer, sample: SampleOpts) => void;
+    addSample: (
+      trackId: number,
+      buf: Uint8Array | ArrayBuffer,
+      sample: SampleOpts,
+    ) => void;
     releaseUsedSamples(id: number, usedCount: number): void;
 
     getTrackById: (id: number) => TrakBoxParser;

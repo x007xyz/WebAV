@@ -486,7 +486,9 @@ async function createFileWriter(
   return fileHandle.createWritable();
 }
 
-async function loadFile(accept: Record<string, string[]>) {
+async function loadFile(
+  accept: Record<MIMEType, FileExtension | FileExtension[]>,
+) {
   const [fileHandle] = await window.showOpenFilePicker({
     types: [{ accept }],
   });
