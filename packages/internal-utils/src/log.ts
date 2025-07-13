@@ -119,10 +119,13 @@ interface PressureRecord {
   });
 
   if ('PressureObserver' in globalThis) {
+    let lastStateStr = '';
     const observer = new PressureObserver((records) => {
-      Log.info(
-        `cpu state change: ${JSON.stringify(records.map((r) => r.state))}`,
-      );
+      const stateStr = JSON.stringify(records.map((r) => r.state));
+      if (stateStr !== lastStateStr) {
+        Log.info(`cpu state change: ${stateStr}`);
+        lastStateStr = stateStr;
+      }
     });
     observer.observe('cpu');
   }

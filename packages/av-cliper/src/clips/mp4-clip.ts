@@ -560,8 +560,19 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: MP4ClipOpts = {}) {
     (_, type, samples) => {
       if (type === 'video') {
         if (videoDeltaTS === -1) videoDeltaTS = samples[0].dts;
-        for (const s of samples) {
-          videoSamples.push(normalizeTimescale(s, videoDeltaTS, 'video'));
+        let findedFirstSync = false;
+        for (let i = 0; i < samples.length; i++) {
+          const s = samples[i];
+          if (!findedFirstSync && s.is_sync) {
+            findedFirstSync = true;
+            videoSamples.push(
+              normalizeTimescale(s, videoDeltaTS, 'video', true),
+            );
+          } else {
+            videoSamples.push(
+              normalizeTimescale(s, videoDeltaTS, 'video', false),
+            );
+          }
         }
       } else if (type === 'audio' && opts.audio) {
         if (audioDeltaTS === -1) audioDeltaTS = samples[0].dts;
@@ -594,20 +605,25 @@ function normalizeTimescale(
   s: MP4Sample,
   delta = 0,
   sampleType: 'video' | 'audio',
+  isFirstSync?: boolean,
 ) {
   // todo: perf 丢弃多余字段，小尺寸对象性能更好
   let offset = s.offset;
-  const is_idr = sampleType === 'video' && s.is_sync;
-  const idrOffset = is_idr
+  const isVideoSync = sampleType === 'video' && s.is_sync;
+  const idrOffset = isVideoSync
     ? idrNALUOffset(s.data, s.description.type, offset)
     : -1;
 
+  // 默认信任第一个关键帧 是 IDR 帧，兼容某些异常标注的视频文件
+  let is_idr = isFirstSync === true && isVideoSync;
   let size = s.size;
   if (idrOffset >= 0) {
     // 当 IDR 帧前面包含非图像帧数据（如 SEI），可能导致解码失败
     // 所以此处通过控制 offset、size 字段 跳过非图像帧数据
     offset = idrOffset;
     size -= idrOffset - offset;
+    // 非第一个关键帧，如果根据 naluType 判定是 IDR 帧，则设置 is_idr
+    is_idr = true;
   }
 
   return {
@@ -1498,7 +1514,7 @@ if (import.meta.vitest) {
       description: { type: 'avc1' },
       is_rap: false,
     };
-    const normalized = normalizeTimescale(s, 0, 'video');
+    const normalized = normalizeTimescale(s, 0, 'video', true);
     expect(normalized.offset).toBe(48);
     expect(normalized.size).toBe(1000);
     expect(normalized.is_sync).toBe(normalized.is_idr);
