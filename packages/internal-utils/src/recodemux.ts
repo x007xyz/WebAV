@@ -1,8 +1,8 @@
 import mp4box, { MP4File, SampleOpts } from '@webav/mp4box.js';
 import { EventTool } from './event-tool';
+import { Log } from './log';
 import { createMetaBox } from './meta-box';
 import { workerTimer } from './worker-timer';
-import { Log } from './log';
 
 type TCleanFn = () => void;
 
@@ -405,7 +405,7 @@ function encodeAudioTrack(
     output: (chunk, meta) => {
       if (trackId === -1) {
         // 某些设备不会输出 description
-        const desc = meta.decoderConfig?.description;
+        const desc = meta?.decoderConfig?.description;
         trackId = mp4File.addTrack({
           ...audioTrackOpts,
           description: desc == null ? undefined : createESDSBox(desc),

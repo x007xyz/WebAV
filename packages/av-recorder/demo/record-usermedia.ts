@@ -35,9 +35,9 @@ startEl?.addEventListener('click', () => {
     const writer = await createFileWriter('mp4');
     recorder.start().pipeTo(writer).catch(console.error);
 
-    startEl.style.visibility = 'hidden';
-    pauseEl.style.visibility = 'visible';
-    continueEl.style.visibility = 'hidden';
+    Object.assign(startEl.style, { visibility: 'hidden' });
+    Object.assign(pauseEl.style, { visibility: 'visible' });
+    Object.assign(continueEl.style, { visibility: 'hidden' });
   })().catch(console.error);
 });
 const stopEl = document.querySelector('#stopRecod') as HTMLButtonElement;
@@ -45,9 +45,9 @@ stopEl?.addEventListener('click', () => {
   (async () => {
     await recorder?.stop();
     alert('save done');
-    startEl.style.visibility = 'visible';
-    pauseEl.style.visibility = 'hidden';
-    continueEl.style.visibility = 'hidden';
+    Object.assign(startEl.style, { visibility: 'visible' });
+    Object.assign(pauseEl.style, { visibility: 'hidden' });
+    Object.assign(continueEl.style, { visibility: 'hidden' });
   })().catch(console.error);
 });
 
@@ -57,9 +57,9 @@ pauseEl?.addEventListener('click', () => {
     if (recorder == null) return;
     recorder.pause();
 
-    startEl.style.visibility = 'hidden';
-    pauseEl.style.visibility = 'hidden';
-    continueEl.style.visibility = 'visible';
+    Object.assign(startEl.style, { visibility: 'hidden' });
+    Object.assign(pauseEl.style, { visibility: 'hidden' });
+    Object.assign(continueEl.style, { visibility: 'visible' });
   })().catch(console.error);
 });
 const continueEl = document.querySelector(
@@ -70,9 +70,9 @@ continueEl?.addEventListener('click', () => {
     if (recorder == null) return;
     recorder.resume();
 
-    startEl.style.visibility = 'hidden';
-    pauseEl.style.visibility = 'visible';
-    continueEl.style.visibility = 'hidden';
+    Object.assign(startEl.style, { visibility: 'hidden' });
+    Object.assign(pauseEl.style, { visibility: 'visible' });
+    Object.assign(continueEl.style, { visibility: 'hidden' });
   })().catch(console.error);
 });
 
