@@ -1,5 +1,11 @@
 # @webav/internal-utils
 
+## 1.1.8
+
+### Patch Changes
+
+- c99bd8e: fix: the first keyframe is trusted as an IDR frame by default for compatibility with certain video files that have abnormal annotations.
+
 ## 1.1.7
 
 ## 1.1.6

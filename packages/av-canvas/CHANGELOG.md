@@ -1,5 +1,13 @@
 # @webav/av-canvas
 
+## 1.1.8
+
+### Patch Changes
+
+- Updated dependencies [c99bd8e]
+  - @webav/internal-utils@1.1.8
+  - @webav/av-cliper@1.1.8
+
 ## 1.1.7
 
 ### Patch Changes
