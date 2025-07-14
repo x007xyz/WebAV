@@ -22,6 +22,6 @@
     "prepare": "pnpm build"
   },
   "dependencies": {
-    "@webav/mp4box.js": "0.5.6"
+    "@webav/mp4box.js": "^0.5.7"
   }
 }

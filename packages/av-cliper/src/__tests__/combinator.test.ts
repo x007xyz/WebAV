@@ -1,5 +1,5 @@
-import { test, expect, vi } from 'vitest';
-import { OffscreenSprite } from '../sprite/offscreen-sprite';
+import { expect, test, vi } from 'vitest';
+import { extractPCM4AudioData } from '../av-utils';
 import {
   AudioClip,
   DEFAULT_AUDIO_CONF,
@@ -8,7 +8,7 @@ import {
   MP4Clip,
 } from '../clips';
 import { Combinator, createAudioTrackBuf } from '../combinator';
-import { extractPCM4AudioData } from '../av-utils';
+import { OffscreenSprite } from '../sprite/offscreen-sprite';
 
 const m4a_44kHz_2chan = `//${location.host}/audio/44.1kHz-2chan.m4a`;
 const mp3_16kHz_1chan = `//${location.host}/audio/16kHz-1chan.mp3`;
@@ -191,4 +191,28 @@ test('Combinator.isSupported', async () => {
       bitrate: 24e6,
     }),
   ).toBe(true);
+});
+
+test('vp9 video codec', async () => {
+  const resp1 = await fetch(png_bunny);
+  const spr1 = new OffscreenSprite(new ImgClip(resp1.body!));
+
+  const com = new Combinator({
+    width: 900,
+    height: 500,
+    audio: false,
+    videoCodec: 'vp09.00.40.08',
+  });
+  spr1.time = { offset: 0, duration: 1e6 };
+  await com.addSprite(spr1);
+
+  const mp4Clip = new MP4Clip(com.output());
+  await mp4Clip.ready;
+  expect(mp4Clip.meta).toMatchObject({
+    width: 900,
+    height: 500,
+    audioSampleRate: 0,
+    audioChanCount: 0,
+  });
+  expect(mp4Clip.meta.duration / 1e6).toBeCloseTo(1, 1);
 });

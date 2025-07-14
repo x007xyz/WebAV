@@ -167,6 +167,9 @@ function encodeVideoTrack(
     height: opts.height,
     brands: ['isom', 'iso2', 'avc1', 'mp42', 'mp41'],
     avcDecoderConfigRecord: null as ArrayBuffer | undefined | null,
+    hevcDecoderConfigRecord: null as ArrayBuffer | undefined | null,
+    vpcDecoderConfigRecord: null as ArrayBuffer | undefined | null,
+    type: 'avc1',
     name: 'Track created with WebAV',
   };
 
@@ -189,9 +192,24 @@ function encodeVideoTrack(
     meta?: EncodedVideoChunkMetadata,
   ) => {
     if (trackId === -1 && meta != null) {
-      const desc = meta.decoderConfig?.description as ArrayBuffer;
-      fixChromeConstraintSetFlagsBug(desc);
-      videoTrackOpts.avcDecoderConfigRecord = desc;
+      let desc = meta.decoderConfig?.description as ArrayBuffer;
+      if (opts.codec.startsWith('avc1')) {
+        fixChromeConstraintSetFlagsBug(desc);
+      } else if (opts.codec.startsWith('vp09') && meta.decoderConfig) {
+        videoTrackOpts.type = 'vp09';
+        desc = createVP9ConfDesc(meta.decoderConfig);
+      }
+      const decorderConfKey = (
+        [
+          ['avc1', 'avcDecoderConfigRecord'],
+          ['hvc1', 'hevcDecoderConfigRecord'],
+          ['vp09', 'vpcDecoderConfigRecord'],
+        ] as const
+      ).find(([codec]) => opts.codec.startsWith(codec))?.[1];
+      if (decorderConfKey != null && desc != null) {
+        videoTrackOpts[decorderConfKey] = desc;
+      }
+
       trackId = mp4File.addTrack(videoTrackOpts);
       avSyncEvtTool.emit('VideoReady');
       Log.info('VideoEncoder, video track ready, trackId:', trackId);
@@ -498,4 +516,82 @@ function chunk2MP4SampleOpts(
     is_sync: chunk.type === 'key',
     data: buf,
   };
+}
+
+function createVP9ConfDesc(decoderConfig: VideoDecoderConfig): ArrayBuffer {
+  const codec = decoderConfig.codec; // e.g., "vp09.00.40.08"
+  const codecParts = codec.split('.');
+
+  // Parse codec string: vp09.profile.level.bitDepth
+  const profile = parseInt(codecParts[1] || '0', 10);
+  const level = parseInt(codecParts[2] || '40', 10);
+  const bitDepth = parseInt(codecParts[3] || '08', 10);
+
+  // Map color space values
+  const colourPrimariesMap: Record<string, number> = {
+    bt709: 1,
+    bt601: 5,
+    bt2020: 9,
+  };
+
+  const transferCharacteristicsMap: Record<string, number> = {
+    bt709: 1,
+    srgb: 13,
+    pq: 16,
+    hlg: 18,
+  };
+
+  const matrixCoefficientsMap: Record<string, number> = {
+    bt709: 1,
+    bt601: 5,
+    bt2020: 9,
+  };
+
+  const colourPrimaries =
+    colourPrimariesMap[decoderConfig.colorSpace?.primaries || 'bt709'] || 1;
+  const transferCharacteristics =
+    transferCharacteristicsMap[decoderConfig.colorSpace?.transfer || 'bt709'] ||
+    1;
+  const matrixCoefficients =
+    matrixCoefficientsMap[decoderConfig.colorSpace?.matrix || 'bt709'] || 1;
+  const videoFullRangeFlag = decoderConfig.colorSpace?.fullRange ? 1 : 0;
+
+  // Default chroma subsampling to 4:2:0 (value 1)
+  const chromaSubsampling = 1;
+
+  const codecIntializationDataSize = 0;
+
+  // Create buffer with minimal size (no initialization data)
+  const buffer = new ArrayBuffer(12);
+  const view = new DataView(buffer);
+
+  let offset = 0;
+  view.setUint32(offset, 1 << 24);
+  offset += 4;
+
+  // Profile (8 bits)
+  view.setUint8(offset++, profile);
+
+  // Level (8 bits)
+  view.setUint8(offset++, level);
+
+  // Bit depth (4 bits) + Chroma subsampling (3 bits) + Video full range flag (1 bit)
+  view.setUint8(
+    offset++,
+    (bitDepth << 4) | (chromaSubsampling << 1) | videoFullRangeFlag,
+  );
+
+  // Colour primaries (8 bits)
+  view.setUint8(offset++, colourPrimaries);
+
+  // Transfer characteristics (8 bits)
+  view.setUint8(offset++, transferCharacteristics);
+
+  // Matrix coefficients (8 bits)
+  view.setUint8(offset++, matrixCoefficients);
+
+  // Codec initialization data size (16 bits) - set to 0 for no init data
+  view.setUint16(offset, codecIntializationDataSize);
+
+  return buffer;
 }

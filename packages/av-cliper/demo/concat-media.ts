@@ -1,10 +1,10 @@
-import { AudioClip, ImgClip, MP4Clip, concatAudioClip } from '../src/clips';
-import { Combinator } from '../src/combinator';
-import { OffscreenSprite } from '../src/sprite/offscreen-sprite';
-import { renderTxt2ImgBitmap } from '../src/dom-utils';
-import { EmbedSubtitlesClip } from '../src/clips/embed-subtitles-clip';
-import { playOutputStream } from './play-video';
 import { Log, createChromakey, fastConcatMP4 } from '../src';
+import { AudioClip, ImgClip, MP4Clip, concatAudioClip } from '../src/clips';
+import { EmbedSubtitlesClip } from '../src/clips/embed-subtitles-clip';
+import { Combinator } from '../src/combinator';
+import { renderTxt2ImgBitmap } from '../src/dom-utils';
+import { OffscreenSprite } from '../src/sprite/offscreen-sprite';
+import { playOutputStream } from './play-video';
 
 // const cvs = document.querySelector('canvas') as HTMLCanvasElement
 // const ctx = cvs.getContext('2d')!
@@ -67,7 +67,8 @@ document.querySelector('#mp4-img')?.addEventListener('click', () => {
       width: 1280,
       height: 720,
       fps: 60,
-      videoCodec: 'avc1.42E032',
+      // videoCodec: 'avc1.42E032',
+      videoCodec: 'vp09.00.10.08',
       bgColor: 'white',
       // audio: false,
       metaDataTags: { hello: 'world' },

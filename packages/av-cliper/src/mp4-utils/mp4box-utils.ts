@@ -21,7 +21,7 @@ export function extractFileConfig(file: MP4File, info: MP4Info) {
     audioDecoderConf?: Parameters<AudioDecoder['configure']>[0];
   } = {};
   if (vTrack != null) {
-    const videoDesc = parseVideoCodecDesc(file.getTrackById(vTrack.id)).buffer;
+    const videoDesc = parseVideoCodecDesc(file.getTrackById(vTrack.id))?.buffer;
     const { descKey, type } = vTrack.codec.startsWith('avc1')
       ? { descKey: 'avcDecoderConfigRecord', type: 'avc1' }
       : vTrack.codec.startsWith('hvc1')
@@ -71,7 +71,7 @@ export function extractFileConfig(file: MP4File, info: MP4Info) {
 }
 
 // track is H.264, H.265 or VPX.
-function parseVideoCodecDesc(track: TrakBoxParser): Uint8Array {
+function parseVideoCodecDesc(track: TrakBoxParser): Uint8Array | undefined {
   for (const entry of track.mdia.minf.stbl.stsd.entries) {
     // @ts-expect-error
     const box = entry.avcC ?? entry.hvcC ?? entry.av1C ?? entry.vpcC;
@@ -85,7 +85,7 @@ function parseVideoCodecDesc(track: TrakBoxParser): Uint8Array {
       return new Uint8Array(stream.buffer.slice(8)); // Remove the box header.
     }
   }
-  throw Error('avcC, hvcC, av1C or VPX not found');
+  return undefined;
 }
 
 function getESDSBoxFromMP4File(file: MP4File, codec = 'mp4a') {

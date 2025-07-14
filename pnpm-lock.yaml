@@ -170,8 +170,8 @@ importers:
         specifier: workspace:*
         version: link:../internal-utils
       '@webav/mp4box.js':
-        specifier: 0.5.6
-        version: 0.5.6
+        specifier: ^0.5.7
+        version: 0.5.7
       opfs-tools:
         specifier: ^0.7.2
         version: 0.7.2
@@ -195,8 +195,8 @@ importers:
   packages/internal-utils:
     dependencies:
       '@webav/mp4box.js':
-        specifier: 0.5.6
-        version: 0.5.6
+        specifier: ^0.5.7
+        version: 0.5.7
 
 packages:
 
@@ -2663,8 +2663,8 @@ packages:
   '@webassemblyjs/wast-printer@1.14.1':
     resolution: {integrity: sha512-kPSSXE6De1XOR820C90RIo2ogvZG+c3KiHzqUoO/F34Y2shGzesfqv7o57xrxovZJH/MetF5UjroJ/R/3isoiw==}
 
-  '@webav/mp4box.js@0.5.6':
-    resolution: {integrity: sha512-DpZQlr624oyLwnmJjNIWggk4d2dfKsAwQdNMVf0akjx0BtXL45Fmd49tm0ekn9d9dB3zBIxxsgco5IcJQGpt4Q==}
+  '@webav/mp4box.js@0.5.7':
+    resolution: {integrity: sha512-KgScEtDpiLnWvj1Rj8Ri9fDWxTjfdNr7cmY/PT88EmttHh6cLxMAeyD/W8Vydes4z7qV/c5VDAaP4cTlaO0E9g==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -12499,7 +12499,7 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@xtuc/long': 4.2.2
 
-  '@webav/mp4box.js@0.5.6': {}
+  '@webav/mp4box.js@0.5.7': {}
 
   '@xtuc/ieee754@1.2.0': {}
 

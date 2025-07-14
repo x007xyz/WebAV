@@ -75,6 +75,8 @@ declare module '@webav/mp4box.js' {
     brands: string[];
     description_boxes?: AVCCBox[];
     avcDecoderConfigRecord?: AllowSharedBufferSource | undefined | null;
+    hevcDecoderConfigRecord?: AllowSharedBufferSource | undefined | null;
+    vpcCDecoderConfigRecord?: AllowSharedBufferSource | undefined | null;
   }
 
   export interface AudioTrackOpts {
