@@ -1,5 +1,11 @@
 # @webav/internal-utils
 
+## 1.1.9
+
+### Patch Changes
+
+- ccd0ec8: feat: support mux vp9 #434
+
 ## 1.1.8
 
 ### Patch Changes
