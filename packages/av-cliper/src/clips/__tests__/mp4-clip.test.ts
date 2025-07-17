@@ -1,9 +1,10 @@
+import mp4box, { MP4ArrayBuffer } from '@webav/mp4box.js';
+import { file, write } from 'opfs-tools';
 import { expect, test, vi } from 'vitest';
 import { MP4Clip } from '../mp4-clip';
-import { file, write } from 'opfs-tools';
-import mp4box, { MP4ArrayBuffer } from '@webav/mp4box.js';
 
 const mp4_123 = `//${location.host}/video/123.mp4`;
+const incorrectFrameTypeMp4 = `//${location.host}/video/incorrect-frame-type.mp4`;
 
 async function fastestDecode(clip: MP4Clip) {
   let time = 0;
@@ -168,4 +169,14 @@ test('get file header data', async () => {
     }),
   );
   expect(boxfile.moov?.mvhd.matrix.length).toBe(9);
+});
+
+test('decode incorrectFrameTypeMp4', async () => {
+  const clip = new MP4Clip((await fetch(incorrectFrameTypeMp4)).body!);
+  await clip.ready;
+  console.log(clip.meta.duration);
+  expect(Math.round(clip.meta.duration / 1e6)).toBe(5);
+  const { state, video } = await clip.tick(clip.meta.duration - 30e3);
+  expect(state).toBe('success');
+  expect(video?.timestamp).toBe(5e6);
 });

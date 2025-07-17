@@ -527,6 +527,7 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: MP4ClipOpts = {}) {
 
   let videoDeltaTS = -1;
   let audioDeltaTS = -1;
+  let findedFirstSync = false;
   const reader = await otFile.createReader();
   await quickParseMP4File(
     reader,
@@ -560,7 +561,6 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: MP4ClipOpts = {}) {
     (_, type, samples) => {
       if (type === 'video') {
         if (videoDeltaTS === -1) videoDeltaTS = samples[0].dts;
-        let findedFirstSync = false;
         for (let i = 0; i < samples.length; i++) {
           const s = samples[i];
           if (!findedFirstSync && s.is_sync) {
@@ -1329,17 +1329,7 @@ function decodeGoP(
   },
 ) {
   if (dec.state !== 'configured') return;
-  try {
-    for (let i = 0; i < chunks.length; i++) dec.decode(chunks[i]);
-  } catch (err) {
-    if (
-      err instanceof Error &&
-      err.name === 'DataError' &&
-      opts.onDecodingError != null
-    ) {
-      opts.onDecodingError(err);
-    }
-  }
+  for (let i = 0; i < chunks.length; i++) dec.decode(chunks[i]);
 
   // todo：flush 之后下一帧必须是 IDR 帧，是否可以根据情况再决定调用 flush？
   // windows 某些设备 flush 可能不会被 resolved，所以不能 await flush

@@ -3,6 +3,16 @@
 import { workerTimer } from '@webav/internal-utils';
 import * as waveResampler from 'wave-resampler';
 
+import { Log } from '@webav/internal-utils';
+
+if (import.meta.env?.DEV) {
+  Log.setLogLevel(Log.debug);
+}
+
+if (import.meta.env?.MODE === 'test') {
+  Log.setLogLevel(Log.warn);
+}
+
 /**
  * 合并（串联）多个 Float32Array，通常用于合并 PCM 数据
  */
