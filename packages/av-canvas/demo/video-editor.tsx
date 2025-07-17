@@ -183,6 +183,18 @@ function App() {
     //   addSprite2Track('4-text', spr, '文字');
     // })();
 
+    // 模拟添加 60个素材，验证内存占用
+    // (async () => {
+    //   const f = file('/test-1.mp4');
+    //   await write(f, (await fetch('./video/incorrect-frame-type.mp4')).body!);
+    //   for (let i = 0; i < 60; i++) {
+    //     const spr = new VisibleSprite(new MP4Clip(f));
+    //     await spr.ready;
+    //     await cvs.addSprite(spr);
+    //     addSprite2Track('1-video', spr, '视频');
+    //   }
+    // })();
+
     return () => {
       cvs.destroy();
     };

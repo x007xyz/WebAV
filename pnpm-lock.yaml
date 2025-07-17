@@ -151,6 +151,9 @@ importers:
       esbuild-plugin-react-virtualized:
         specifier: ^1.0.5
         version: 1.0.5(esbuild@0.25.6)
+      opfs-tools:
+        specifier: ^0.7.2
+        version: 0.7.2
       postcss:
         specifier: ^8.4.38
         version: 8.5.6
@@ -190,7 +193,7 @@ importers:
     devDependencies:
       '@typescript/lib-dom':
         specifier: npm:@types/web
-        version: '@types/web@0.0.246'
+        version: '@types/web@0.0.249'
 
   packages/internal-utils:
     dependencies:
@@ -2221,8 +2224,8 @@ packages:
   '@types/use-sync-external-store@0.0.3':
     resolution: {integrity: sha512-EwmlvuaxPNej9+T4v5AuBPJa2x2UOJVdjCtDHgcDqitUeOtjnJKJ+apYjVcAoBEMjKW1VVFGZLUb5+qqa09XFA==}
 
-  '@types/web@0.0.246':
-    resolution: {integrity: sha512-TCeVQAgAophSXiipdERUYPbYIOn2sfhqEN/Zmr+rJGdWsBkEbYbzqNjOxS0GabsJyAOuZcoHOd7N6QX4zNlq0A==}
+  '@types/web@0.0.249':
+    resolution: {integrity: sha512-PzYylk5MofTsZj3Znc6T9xuYcLJXabYeAsTKsAzXudqpGdj9z4sYpKJruxpMUZFS+hdGgfDXptht1Yu8y4W0dw==}
 
   '@types/which@2.0.2':
     resolution: {integrity: sha512-113D3mDkZDjo+EeUEHCFy0qniNc1ZpecGiAU7WSo7YDoSzolZIQKpYFHrPpjkB2nuyahcKfrmLXeQlh7gqJYdw==}
@@ -11698,7 +11701,7 @@ snapshots:
 
   '@types/use-sync-external-store@0.0.3': {}
 
-  '@types/web@0.0.246': {}
+  '@types/web@0.0.249': {}
 
   '@types/which@2.0.2': {}
 

@@ -7,7 +7,7 @@ import {
   Rect,
   VisibleSprite,
 } from '@webav/av-cliper';
-import { EventTool, workerTimer } from '@webav/internal-utils';
+import { EventTool, throttle, workerTimer } from '@webav/internal-utils';
 import { renderCtrls } from './sprites/render-ctrl';
 import { ESpriteManagerEvt, SpriteManager } from './sprites/sprite-manager';
 import { activeSprite, draggabelSprite } from './sprites/sprite-op';
@@ -163,6 +163,7 @@ export class AVCanvas {
   #updateRenderTime(time: number) {
     this.#renderTime = time;
     this.#spriteManager.updateRenderTime(time);
+    this.#autoPreFrame.updateTime(time);
   }
 
   #pause() {
@@ -177,6 +178,7 @@ export class AVCanvas {
       asn.disconnect();
     }
     this.#playingAudioCache.clear();
+    this.#autoPreFrame.reset();
   }
 
   #audioCtx = new AudioContext();
@@ -259,11 +261,7 @@ export class AVCanvas {
     }
 
     this.#updateRenderTime(opts.start);
-    this.#spriteManager.getSprites({ time: false }).forEach((vs) => {
-      const { offset, duration } = vs.time;
-      const selfOffset = this.#renderTime - offset;
-      vs.preFrame(selfOffset > 0 && selfOffset < duration ? selfOffset : 0);
-    });
+    this.#autoPreFrame.reset();
 
     this.#playState.start = opts.start;
     this.#playState.end = end;
@@ -275,6 +273,27 @@ export class AVCanvas {
     this.#evtTool.emit('playing');
     Log.info('AVCanvs play by:', this.#playState);
   }
+
+  #autoPreFrame = (() => {
+    const readyVS = new Set<VisibleSprite>();
+    return {
+      reset() {
+        readyVS.clear();
+      },
+      updateTime: throttle((curTime: number) => {
+        const sprs = this.#spriteManager.getSprites({ time: false });
+        // 匹配接下来 300ms 内即将要播放的 Sprite
+        const matchPreSprs = sprs.filter((vs) => {
+          const { offset } = vs.time;
+          return offset > curTime && offset - 300e3 <= curTime;
+        });
+        for (const vs of matchPreSprs) {
+          if (!readyVS.has(vs)) vs.preFrame(0);
+          readyVS.add(vs);
+        }
+      }, 300),
+    };
+  })();
 
   /**
    * 暂停播放，画布内容不再更新
@@ -288,6 +307,9 @@ export class AVCanvas {
    */
   previewFrame(time: number) {
     this.#updateRenderTime(time);
+    this.#spriteManager.getSprites().forEach((vs) => {
+      vs.preFrame(time - vs.time.offset);
+    });
     this.#pause();
   }
 
@@ -330,7 +352,6 @@ export class AVCanvas {
       this.#sprMapAudioNode.set(vs, audioNode);
     }
     await this.#spriteManager.addSprite(vs);
-    vs.preFrame(0);
   };
   /**
    * 删除 {@link VisibleSprite}
