@@ -1,5 +1,12 @@
 # @webav/av-cliper
 
+## 1.1.10
+
+### Patch Changes
+
+- 14f3cf9: fix: compatible frame type incorrect
+  - @webav/internal-utils@1.1.10
+
 ## 1.1.9
 
 ### Patch Changes
