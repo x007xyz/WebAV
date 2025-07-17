@@ -1,5 +1,13 @@
 # @webav/av-canvas
 
+## 1.1.13
+
+### Patch Changes
+
+- e372b9c: fix: might be a brief black frame flicker during playback
+  - @webav/av-cliper@1.1.13
+  - @webav/internal-utils@1.1.13
+
 ## 1.1.12
 
 ### Patch Changes
