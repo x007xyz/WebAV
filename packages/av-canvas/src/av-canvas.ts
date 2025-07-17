@@ -282,16 +282,16 @@ export class AVCanvas {
       },
       updateTime: throttle((curTime: number) => {
         const sprs = this.#spriteManager.getSprites({ time: false });
-        // 匹配接下来 300ms 内即将要播放的 Sprite
+        // 匹配接下来 1s 内即将要播放的 Sprite
         const matchPreSprs = sprs.filter((vs) => {
           const { offset } = vs.time;
-          return offset > curTime && offset - 300e3 <= curTime;
+          return offset > curTime && offset - 1e6 <= curTime;
         });
         for (const vs of matchPreSprs) {
           if (!readyVS.has(vs)) vs.preFrame(0);
           readyVS.add(vs);
         }
-      }, 300),
+      }, 500),
     };
   })();
 
