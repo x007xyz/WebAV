@@ -1328,9 +1328,18 @@ function decodeGoP(
     onDecodingError?: (err: Error) => void;
   },
 ) {
-  let i = 0;
   if (dec.state !== 'configured') return;
-  for (; i < chunks.length; i++) dec.decode(chunks[i]);
+  try {
+    for (let i = 0; i < chunks.length; i++) dec.decode(chunks[i]);
+  } catch (err) {
+    if (
+      err instanceof Error &&
+      err.name === 'DataError' &&
+      opts.onDecodingError != null
+    ) {
+      opts.onDecodingError(err);
+    }
+  }
 
   // todo：flush 之后下一帧必须是 IDR 帧，是否可以根据情况再决定调用 flush？
   // windows 某些设备 flush 可能不会被 resolved，所以不能 await flush
