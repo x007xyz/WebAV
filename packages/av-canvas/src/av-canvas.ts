@@ -306,10 +306,10 @@ export class AVCanvas {
    * 预览 `AVCanvas` 指定时间的图像帧
    */
   previewFrame(time: number) {
-    this.#updateRenderTime(time);
     this.#spriteManager.getSprites().forEach((vs) => {
       vs.preFrame(time - vs.time.offset);
     });
+    this.#updateRenderTime(time);
     this.#pause();
   }
 

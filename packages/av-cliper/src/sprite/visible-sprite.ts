@@ -49,9 +49,6 @@ export class VisibleSprite extends BaseSprite {
     if (this.#ticking) return;
     this.#ticking = true;
 
-    this.#lastVf?.close();
-    this.#lastVf = null;
-    this.#lastAudio = [];
     this.#clip
       .tick(time * this.time.playbackRate)
       .then(({ video, audio }) => {
@@ -76,6 +73,9 @@ export class VisibleSprite extends BaseSprite {
    */
   preFrame(time: number) {
     if (this.#lastTime === time) return;
+    this.#lastVf?.close();
+    this.#lastVf = null;
+    this.#lastAudio = [];
     this.#update(time);
     this.#lastTime = time;
   }
