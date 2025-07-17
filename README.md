@@ -203,6 +203,7 @@ We would like to thank our GitHub sponsors who support the development of WebAV:
   <a href="https://github.com/425776024"><img src="https://github.com/425776024.png" width="50" height="50" alt="425776024" /></a>
   <a href="https://github.com/CheckCoder"><img src="https://github.com/CheckCoder.png" width="50" height="50" alt="CheckCoder" /></a>
   <a href="https://github.com/chunpu"><img src="https://github.com/chunpu.png" width="50" height="50" alt="chunpu" /></a>
+  <a href="https://github.com/jundaychan"><img src="https://github.com/jundaychan.png" width="50" height="50" alt="jundaychan" /></a>
 </div>
 
 Your support helps us continue to improve and maintain this project!
