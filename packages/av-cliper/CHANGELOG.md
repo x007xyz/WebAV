@@ -1,5 +1,12 @@
 # @webav/av-cliper
 
+## 1.1.11
+
+### Patch Changes
+
+- 32b7d47: fix: OOM when add many clips to AVCanvas
+  - @webav/internal-utils@1.1.11
+
 ## 1.1.10
 
 ### Patch Changes
