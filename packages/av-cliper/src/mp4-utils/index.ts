@@ -223,12 +223,14 @@ async function concatStreamsToMP4BoxFile(
       });
     });
     if (lastVSamp != null) {
-      vDTS += lastVSamp.dts;
-      vCTS += lastVSamp.cts;
+      vDTS += lastVSamp.dts + lastVSamp.duration;
+      vCTS += lastVSamp.cts + lastVSamp.duration;
     }
-    if (lastASamp != null) {
-      aDTS += lastASamp.dts;
-      aCTS += lastASamp.cts;
+    if (lastASamp != null && lastVSamp != null) {
+      // Force audio timing to match video timing (converted to audio timescale)
+      const videoToAudioRatio = lastASamp.timescale / lastVSamp.timescale;
+      aDTS = Math.round(vDTS * videoToAudioRatio);
+      aCTS = Math.round(vCTS * videoToAudioRatio);
     }
   }
 }
