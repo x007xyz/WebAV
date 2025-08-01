@@ -1,5 +1,12 @@
 # @webav/av-cliper
 
+## 1.1.14
+
+### Patch Changes
+
+- 9bae19e: fix: audio/video sync drift in fixMP4BoxFileDuration #446
+  - @webav/internal-utils@1.1.14
+
 ## 1.1.13
 
 ### Patch Changes
