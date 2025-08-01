@@ -189,12 +189,12 @@ export class AVCanvas {
     const cvsCtx = this.#cvsCtx;
     let ts = this.#renderTime;
     const { start, end, step, audioPlayAt } = this.#playState;
+    ts += step;
     if (step !== 0 && ts >= start && ts < end) {
-      ts += step;
+      this.#updateRenderTime(ts);
     } else {
       this.#pause();
     }
-    this.#updateRenderTime(ts);
 
     const ctxDestAudioData: Float32Array[][] = [];
     for (const s of this.#spriteManager.getSprites()) {
