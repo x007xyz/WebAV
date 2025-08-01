@@ -1,5 +1,13 @@
 # @webav/av-canvas
 
+## 1.1.15
+
+### Patch Changes
+
+- 5fd91c1: fix: AVCanvas displays a black frame when played to the last frame
+  - @webav/av-cliper@1.1.15
+  - @webav/internal-utils@1.1.15
+
 ## 1.1.14
 
 ### Patch Changes
