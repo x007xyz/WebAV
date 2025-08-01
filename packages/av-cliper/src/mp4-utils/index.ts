@@ -181,6 +181,12 @@ async function concatStreamsToMP4BoxFile(
   let lastVSamp: any = null;
   let lastASamp: any = null;
   for (const stream of streams) {
+    // reset first sample timestamps for each stream to enable normalization
+    let firstVDTS: number | null = null;
+    let firstVCTS: number | null = null;
+    let firstADTS: number | null = null;
+    let firstACTS: number | null = null;
+
     await new Promise<void>(async (resolve) => {
       autoReadStream(stream.pipeThrough(new SampleTransform()), {
         onDone: resolve,
@@ -203,10 +209,32 @@ async function concatStreamsToMP4BoxFile(
             const offsetCTS = type === 'video' ? vCTS : aCTS;
 
             samples.forEach((s) => {
+              let normalizedDTS: number;
+              let normalizedCTS: number;
+
+              if (type === 'video') {
+                // capture first sample timestamps for normalization
+                if (firstVDTS === null) {
+                  firstVDTS = s.dts;
+                  firstVCTS = s.cts;
+                }
+                // normalize to start from 0, then add offset
+                normalizedDTS = s.dts - firstVDTS;
+                normalizedCTS = s.cts - (firstVCTS ?? 0);
+              } else {
+                // same for audio
+                if (firstADTS === null) {
+                  firstADTS = s.dts;
+                  firstACTS = s.cts;
+                }
+                normalizedDTS = s.dts - firstADTS;
+                normalizedCTS = s.cts - (firstACTS ?? 0);
+              }
+
               outfile.addSample(trackId, s.data, {
                 duration: s.duration,
-                dts: s.dts + offsetDTS,
-                cts: s.cts + offsetCTS,
+                dts: normalizedDTS + offsetDTS,
+                cts: normalizedCTS + offsetCTS,
                 is_sync: s.is_sync,
               });
             });
@@ -222,13 +250,19 @@ async function concatStreamsToMP4BoxFile(
         },
       });
     });
-    if (lastVSamp != null) {
-      vDTS += lastVSamp.dts;
-      vCTS += lastVSamp.cts;
+    // calculate offsets based on normalized timestamps
+    if (lastVSamp != null && firstVDTS !== null && firstVCTS !== null) {
+      // duration of this normalized stream
+      const normalizedVDTS = lastVSamp.dts - firstVDTS + lastVSamp.duration;
+      const normalizedVCTS = lastVSamp.cts - firstVCTS + lastVSamp.duration;
+      vDTS += normalizedVDTS;
+      vCTS += normalizedVCTS;
     }
-    if (lastASamp != null) {
-      aDTS += lastASamp.dts;
-      aCTS += lastASamp.cts;
+    // coerce audio timing to match video timing by converting video timescale to audio timescale
+    if (lastASamp != null && lastVSamp != null) {
+      const videoToAudioRatio = lastASamp.timescale / lastVSamp.timescale;
+      aDTS = Math.round(vDTS * videoToAudioRatio);
+      aCTS = Math.round(vCTS * videoToAudioRatio);
     }
   }
 }
