@@ -527,7 +527,6 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: MP4ClipOpts = {}) {
 
   let videoDeltaTS = -1;
   let audioDeltaTS = -1;
-  let findedFirstSync = false;
   const reader = await otFile.createReader();
   await quickParseMP4File(
     reader,
@@ -561,18 +560,8 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: MP4ClipOpts = {}) {
     (_, type, samples) => {
       if (type === 'video') {
         if (videoDeltaTS === -1) videoDeltaTS = samples[0].dts;
-        for (let i = 0; i < samples.length; i++) {
-          const s = samples[i];
-          if (!findedFirstSync && s.is_sync) {
-            findedFirstSync = true;
-            videoSamples.push(
-              normalizeTimescale(s, videoDeltaTS, 'video', true),
-            );
-          } else {
-            videoSamples.push(
-              normalizeTimescale(s, videoDeltaTS, 'video', false),
-            );
-          }
+        for (const s of samples) {
+          videoSamples.push(normalizeTimescale(s, videoDeltaTS, 'video'));
         }
       } else if (type === 'audio' && opts.audio) {
         if (audioDeltaTS === -1) audioDeltaTS = samples[0].dts;
@@ -605,30 +594,25 @@ function normalizeTimescale(
   s: MP4Sample,
   delta = 0,
   sampleType: 'video' | 'audio',
-  isFirstSync?: boolean,
 ) {
   // todo: perf 丢弃多余字段，小尺寸对象性能更好
   let offset = s.offset;
-  const isVideoSync = sampleType === 'video' && s.is_sync;
-  const idrOffset = isVideoSync
-    ? idrNALUOffset(s.data, s.description.type, offset)
-    : -1;
+  // 当 IDR 帧前面包含非图像帧数据（如 SEI），可能导致解码失败
+  const idrOffset =
+    sampleType === 'video' && s.is_sync
+      ? idrNALUOffset(s.data, s.description.type)
+      : -1;
 
-  // 默认信任第一个关键帧 是 IDR 帧，兼容某些异常标注的视频文件
-  let is_idr = isFirstSync === true && isVideoSync;
   let size = s.size;
-  if (idrOffset >= 0) {
-    // 当 IDR 帧前面包含非图像帧数据（如 SEI），可能导致解码失败
-    // 所以此处通过控制 offset、size 字段 跳过非图像帧数据
-    offset = idrOffset;
-    size -= idrOffset - offset;
-    // 非第一个关键帧，如果根据 naluType 判定是 IDR 帧，则设置 is_idr
-    is_idr = true;
+  if (idrOffset > 0) {
+    // 此处通过控制 offset、size 字段 跳过非图像帧数据
+    offset += idrOffset;
+    size -= idrOffset;
   }
 
   return {
     ...s,
-    is_idr,
+    is_idr: idrOffset >= 0,
     offset,
     size,
     cts: ((s.cts - delta) / s.timescale) * 1e6,
@@ -1352,18 +1336,26 @@ function decodeGoP(
 function idrNALUOffset(
   u8Arr: Uint8Array,
   type: MP4Sample['description']['type'],
-  startOffset: number,
 ) {
   if (type !== 'avc1' && type !== 'hvc1') return 0;
 
   const dv = new DataView(u8Arr.buffer);
-  let i = startOffset;
-  for (; i < u8Arr.byteLength - 4; ) {
-    if (type === 'avc1' && (dv.getUint8(i + 4) & 0x1f) === 5) {
-      return i;
+  for (let i = 0; i < u8Arr.byteLength - 4; ) {
+    if (type === 'avc1') {
+      const nalUnitType = dv.getUint8(i + 4) & 0x1f;
+      // 5: IDR 帧, 7: SPS, 8: PPS
+      if (nalUnitType === 5 || nalUnitType === 7 || nalUnitType === 8) return i;
     } else if (type === 'hvc1') {
       const nalUnitType = (dv.getUint8(i + 4) >> 1) & 0x3f;
-      if (nalUnitType === 19 || nalUnitType === 20) return i;
+      // 19-20: IDR 帧, 32-34: VPS SPS PPS
+      if (
+        nalUnitType === 19 ||
+        nalUnitType === 20 ||
+        nalUnitType === 32 ||
+        nalUnitType === 33 ||
+        nalUnitType === 34
+      )
+        return i;
     }
     // 跳至下一个 NALU 继续检查
     i += dv.getUint32(i) + 4;
@@ -1513,7 +1505,7 @@ if (import.meta.vitest) {
       description: { type: 'avc1' },
       is_rap: false,
     };
-    const normalized = normalizeTimescale(s, 0, 'video', true);
+    const normalized = normalizeTimescale(s, 0, 'video');
     expect(normalized.offset).toBe(48);
     expect(normalized.size).toBe(1000);
     expect(normalized.is_sync).toBe(normalized.is_idr);
