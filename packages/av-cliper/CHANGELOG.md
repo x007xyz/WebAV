@@ -1,5 +1,13 @@
 # @webav/av-cliper
 
+## 1.1.16
+
+### Patch Changes
+
+- fc541bb: fix: preserve SPS/PPS NALUs before IDR frames to ensure proper video decoding
+- 0d82c10: fix: display black frame before previewFrame
+  - @webav/internal-utils@1.1.16
+
 ## 1.1.15
 
 ### Patch Changes
