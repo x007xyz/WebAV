@@ -45,38 +45,39 @@ export class VisibleSprite extends BaseSprite {
   #lastVf: VideoFrame | ImageBitmap | null = null;
   #lastAudio: Float32Array[] = [];
   #ticking = false;
-  #update(time: number) {
+  async #update(time: number) {
     if (this.#ticking) return;
     this.#ticking = true;
 
-    this.#clip
-      .tick(time * this.time.playbackRate)
-      .then(({ video, audio }) => {
-        if (video != null) {
-          this.#lastVf?.close();
-          this.#lastVf = video ?? null;
-        }
-        this.#lastAudio = audio ?? [];
-        if (audio != null && this.time.playbackRate !== 1) {
-          this.#lastAudio = audio.map((pcm) =>
-            changePCMPlaybackRate(pcm, this.time.playbackRate),
-          );
-        }
-      })
-      .finally(() => {
-        this.#ticking = false;
-      });
+    try {
+      const { video, audio } = await this.#clip.tick(
+        time * this.time.playbackRate,
+      );
+      if (this.#destroyed) {
+        video?.close();
+        return;
+      }
+      if (video != null) {
+        this.#lastVf?.close();
+        this.#lastVf = video ?? null;
+      }
+      this.#lastAudio = audio ?? [];
+      if (audio != null && this.time.playbackRate !== 1) {
+        this.#lastAudio = audio.map((pcm) =>
+          changePCMPlaybackRate(pcm, this.time.playbackRate),
+        );
+      }
+    } finally {
+      this.#ticking = false;
+    }
   }
 
   /**
    * 提前准备指定 time 的帧
    */
-  preFrame(time: number) {
+  async preFrame(time: number) {
     if (this.#lastTime === time) return;
-    this.#lastVf?.close();
-    this.#lastVf = null;
-    this.#lastAudio = [];
-    this.#update(time);
+    await this.#update(time);
     this.#lastTime = time;
   }
 

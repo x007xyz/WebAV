@@ -305,12 +305,20 @@ export class AVCanvas {
   /**
    * 预览 `AVCanvas` 指定时间的图像帧
    */
-  previewFrame(time: number) {
-    this.#spriteManager.getSprites().forEach((vs) => {
-      vs.preFrame(time - vs.time.offset);
-    });
-    this.#updateRenderTime(time);
+  async previewFrame(time: number) {
     this.#pause();
+    await Promise.all(
+      this.#spriteManager.getSprites({ time: false }).map((vs) => {
+        if (
+          time >= vs.time.offset &&
+          time <= vs.time.offset + vs.time.duration
+        ) {
+          return vs.preFrame(time - vs.time.offset);
+        }
+        return null;
+      }),
+    );
+    this.#updateRenderTime(time);
   }
 
   /**
