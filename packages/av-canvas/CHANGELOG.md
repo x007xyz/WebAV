@@ -1,5 +1,15 @@
 # @webav/av-canvas
 
+## 1.1.16
+
+### Patch Changes
+
+- 0d82c10: fix: display black frame before previewFrame
+- Updated dependencies [fc541bb]
+- Updated dependencies [0d82c10]
+  - @webav/av-cliper@1.1.16
+  - @webav/internal-utils@1.1.16
+
 ## 1.1.15
 
 ### Patch Changes
