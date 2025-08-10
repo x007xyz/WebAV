@@ -1,5 +1,12 @@
 # @webav/av-cliper
 
+## 1.1.17
+
+### Patch Changes
+
+- 0e2c1ae: fix: generating thumbnails may cause the program to hang
+  - @webav/internal-utils@1.1.17
+
 ## 1.1.16
 
 ### Patch Changes
