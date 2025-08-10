@@ -1380,7 +1380,10 @@ async function thumbnailByKeyFrame(
     ),
     fileReader,
   );
-  if (chunks.length === 0 || abortSingl.aborted) return;
+  if (chunks.length === 0 || abortSingl.aborted) {
+    onOutput(null, true);
+    return;
+  }
 
   let outputCnt = 0;
   decodeGoP(createVideoDec(), chunks, {

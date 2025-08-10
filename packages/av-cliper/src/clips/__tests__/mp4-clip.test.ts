@@ -57,6 +57,17 @@ test('thumbnails', async () => {
   clip.destroy();
 });
 
+test('no thumbnails in time range', async () => {
+  const clip = new MP4Clip((await fetch(mp4_bunny)).body!);
+  await clip.ready;
+  const thumbnails = await clip.thumbnails(800, {
+    start: 1e6,
+    end: 2e6,
+  });
+  expect(thumbnails.length).toBe(0);
+  clip.destroy();
+});
+
 test('thumbnails aborted', async () => {
   const clip = new MP4Clip((await fetch(mp4_bunny)).body!);
   await clip.ready;
