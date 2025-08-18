@@ -33,12 +33,12 @@ You can visit <https://webav-tech.github.io/WebAV/demo> to check your current br
 
 For mobile devices and more detailed compatibility information, please check [Can i use WebCodecs](https://caniuse.com/?search=WebCodecs)
 
+:::warning
 **The website must use HTTPS or localhost**, otherwise:
 
 - WebCodecs API will be detected as incompatible.
 - The console will report the error: `Cannot read properties of undefined (reading 'getDirectory')`.
-
-The translation for your text is:
+  :::
 
 ### Does it support Vue or other UI frameworks?
 
@@ -46,3 +46,8 @@ Yes, it does.
 
 WebAV is an audio-video processing library and is independent of any UI framework.  
 The UI in the DEMO is developed using React, but if you're using another UI framework, just focus on the WebAV API.
+
+:::warning
+Do not wrap WebAV object instances using Vue's reactive/proxy APIs. Proxying WebAV objects will cause errors:  
+`Cannot read from private field at xxx`
+:::

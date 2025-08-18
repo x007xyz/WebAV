@@ -35,14 +35,22 @@ Chrome/Edge 102+，不支持 Safari，不支持 Firefox。
 
 移动端以及更详细的兼容信息请查看 [Can i use WebCodecs](https://caniuse.com/?search=WebCodecs)
 
-**且网页必须是 HTTPS 协议或 localhost**，否则
+:::warning
+**网页必须是 HTTPS 协议或 localhost**，否则
 
 - WebCodecs API 检测将返回不兼容
 - 控制台报错 `Cannot read properties of undefined (reading 'getDirectory')`
 
+:::
+
 ### 是否支持 Vue 或其他 UI 框架
 
-支持。
+**支持。**
 
 WebAV 是一个音视频处理工具库，跟 UI 框架无关。  
-DEMO 中的 UI 使用 React 开发，若使用其他 UI 框架重点关注其中 WebAV 的 API 即可。
+DEMO 中的 UI 使用 React 开发，参考其中 WebAV 相关的 API，移植到其他 UI 框架即可。
+
+:::warning
+WebAV 的对象实例不要使用 Vue 进行代理，Proxy 代理 WebAV 对象会导致错误：  
+`Cannot read from private field at xxx`
+:::
