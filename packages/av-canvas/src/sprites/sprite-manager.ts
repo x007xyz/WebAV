@@ -23,6 +23,7 @@ export class SpriteManager {
   }
   set activeSprite(s: VisibleSprite | null) {
     if (s === this.#activeSprite) return;
+    if (s && !s.actable) return;
     this.#activeSprite = s;
     this.#evtTool.emit(ESpriteManagerEvt.ActiveSpriteChange, s);
   }
@@ -32,7 +33,7 @@ export class SpriteManager {
       this.getSprites()
         // 排在后面的层级更高
         .reverse()
-        .find((s) => s.visible && s.rect.checkHit(x, y)) ?? null;
+        .find((s) => s.visible && s.actable && s.rect.checkHit(x, y)) ?? null;
   }
 
   async addSprite(vs: VisibleSprite): Promise<void> {

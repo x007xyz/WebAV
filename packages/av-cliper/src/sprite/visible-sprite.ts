@@ -30,6 +30,11 @@ export class VisibleSprite extends BaseSprite {
    */
   visible = true;
 
+  /**
+   * 元素是否可选中，用于设置元素是否响应画布的选中事件，设置为 false 时不可选中，默认为 true 可选中
+   */
+  actable = true;
+
   constructor(clip: IClip) {
     super();
     this.#clip = clip;
@@ -108,6 +113,7 @@ export class VisibleSprite extends BaseSprite {
     super.copyStateTo(target);
     if (target instanceof VisibleSprite) {
       target.visible = this.visible;
+      target.actable = this.actable;
     }
   }
 
