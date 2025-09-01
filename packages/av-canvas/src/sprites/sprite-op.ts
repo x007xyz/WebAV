@@ -51,9 +51,14 @@ export function draggabelSprite(
 
   // 移动sprite的处理函数
   const onRectMouseDown = (evt: MouseEvent): void => {
-    if (evt.button !== 0 || sprMng.activeSprite == null) return;
-
     const hitSpr = sprMng.activeSprite;
+    if (
+      evt.button !== 0 ||
+      hitSpr == null ||
+      hitSpr.interactable !== 'interactive'
+    )
+      return;
+
     const { clientX, clientY } = evt;
 
     startRect = hitSpr.rect.clone();
@@ -69,16 +74,22 @@ export function draggabelSprite(
 
   const cvsRatio = getCvsRatio(cvsEl);
   const onMouseMove = (evt: MouseEvent): void => {
-    if (sprMng.activeSprite == null || startRect == null) return;
+    const hitSpr = sprMng.activeSprite;
+    if (
+      hitSpr == null ||
+      hitSpr.interactable !== 'interactive' ||
+      startRect == null
+    )
+      return;
 
     const { clientX, clientY } = evt;
     let expectX = startRect.x + (clientX - startX) / cvsRatio.w;
     let expectY = startRect.y + (clientY - startY) / cvsRatio.h;
 
     updateRectWithSafeMargin(
-      sprMng.activeSprite.rect,
+      hitSpr.rect,
       cvsEl,
-      refline.magneticEffect(expectX, expectY, sprMng.activeSprite.rect),
+      refline.magneticEffect(expectX, expectY, hitSpr.rect),
     );
   };
 
@@ -116,18 +127,24 @@ function setupCtrlEvents(
   ctrlElements.forEach((ctrlEl, index) => {
     const ctrlKey = CTRL_KEYS[index];
     ctrlEl.addEventListener('pointerdown', (evt: MouseEvent) => {
-      if (evt.button !== 0 || sprMng.activeSprite == null) return;
+      const hitSpr = sprMng.activeSprite;
+      if (
+        evt.button !== 0 ||
+        hitSpr == null ||
+        hitSpr.interactable !== 'interactive'
+      )
+        return;
 
       const { clientX, clientY } = evt;
 
       if (ctrlKey === 'rotate') {
         rotateRect(
-          sprMng.activeSprite.rect,
-          cntMap2Outer(sprMng.activeSprite.rect.center, cvsRatio, cvsEl),
+          hitSpr.rect,
+          cntMap2Outer(hitSpr.rect.center, cvsRatio, cvsEl),
         );
       } else {
         scaleRect({
-          sprRect: sprMng.activeSprite.rect,
+          sprRect: hitSpr.rect,
           ctrlKey,
           startX: clientX,
           startY: clientY,

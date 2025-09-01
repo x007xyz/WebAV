@@ -43,7 +43,6 @@ export function renderCtrls(
     lastActSprEvtClear = s.on('propsChange', () => {
       syncCtrlElPos(s, cvsEl, rectEl, ctrlsEl);
     });
-    rectEl.style.display = '';
   });
 
   return () => {
@@ -113,7 +112,7 @@ function syncCtrlElPos(
   Object.entries(getRectCtrls(cvsEl, s.rect)).forEach(([k, { x, y, w, h }]) => {
     // ctrl 是相对中心点定位的
     Object.assign(ctrlsEl[k as TCtrlKey].style, {
-      display: 'block',
+      display: s.interactable === 'interactive' ? 'block' : 'none',
       left: '50%',
       top: '50%',
       width: `${w * cvsRatio.w}px`,
@@ -122,4 +121,9 @@ function syncCtrlElPos(
       transform: `translate(${x * cvsRatio.w}px, ${y * cvsRatio.h}px)`,
     });
   });
+  if (s.interactable === 'disabled') {
+    rectEl.style.display = 'none';
+  } else {
+    rectEl.style.display = '';
+  }
 }

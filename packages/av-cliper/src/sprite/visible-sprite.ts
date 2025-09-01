@@ -31,9 +31,13 @@ export class VisibleSprite extends BaseSprite {
   visible = true;
 
   /**
-   * 元素是否可选中，用于设置元素是否响应画布的选中事件，设置为 false 时不可选中，默认为 true 可选中
+   * 控制 Sprite 的交互状态
+   * - 'interactive': 可选中，可进行移动、缩放、旋转等所有交互
+   * - 'selectable': 仅可选中，但不可进行移动、缩放、旋转等交互
+   * - 'disabled': 不可选中，也不可交互
+   * @default 'interactive'
    */
-  actable = true;
+  interactable: 'interactive' | 'selectable' | 'disabled' = 'interactive';
 
   constructor(clip: IClip) {
     super();
@@ -113,7 +117,7 @@ export class VisibleSprite extends BaseSprite {
     super.copyStateTo(target);
     if (target instanceof VisibleSprite) {
       target.visible = this.visible;
-      target.actable = this.actable;
+      target.interactable = this.interactable;
     }
   }
 
