@@ -34,7 +34,6 @@ export async function renderTxt2Img(
   } = {},
 ): Promise<HTMLImageElement> {
   const div = createEl('pre');
-  if (!cssText.includes('line-height')) { cssText += 'line-height: 1;'; }
   div.style.cssText = `margin: 0; ${cssText}; position: fixed;`;
   div.textContent = txt;
   document.body.appendChild(div);
