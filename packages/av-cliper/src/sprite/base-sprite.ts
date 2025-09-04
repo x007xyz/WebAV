@@ -215,6 +215,7 @@ export function linearTimeFn(
   if (offsetTime / opts.duration > opts.iterCount) {
     offsetTime = opts.duration * opts.iterCount;
   }
+  
   const t = offsetTime % opts.duration;
 
   const process = offsetTime === opts.duration ? 1 : t / opts.duration;
