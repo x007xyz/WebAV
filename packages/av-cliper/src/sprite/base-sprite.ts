@@ -211,14 +211,13 @@ export function linearTimeFn(
   kf: TAnimationKeyFrame,
   opts: Required<IAnimationOpts>,
 ): Partial<TAnimateProps> {
-  let offsetTime = time - opts.delay;
-  if (offsetTime / opts.duration > opts.iterCount) {
-    offsetTime = opts.duration * opts.iterCount;
-  }
-  
+  const offsetTime = time - opts.delay;
   const t = offsetTime % opts.duration;
+  const process =
+    offsetTime / opts.duration >= opts.iterCount || offsetTime === opts.duration
+      ? 1
+      : t / opts.duration;
 
-  const process = offsetTime === opts.duration ? 1 : t / opts.duration;
   const idx = kf.findIndex((it) => it[0] >= process);
   if (idx === -1) return {};
 
