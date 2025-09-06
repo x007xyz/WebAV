@@ -1,5 +1,17 @@
 # @webav/av-canvas
 
+## 1.2.0
+
+### Minor Changes
+
+- 5bb3a47: feat: support interactable for VisibleSprite #456
+
+### Patch Changes
+
+- Updated dependencies [5bb3a47]
+  - @webav/av-cliper@1.2.0
+  - @webav/internal-utils@1.2.0
+
 ## 1.1.17
 
 ### Patch Changes
