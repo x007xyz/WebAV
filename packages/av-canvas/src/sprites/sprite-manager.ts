@@ -22,8 +22,7 @@ export class SpriteManager {
     return this.#activeSprite;
   }
   set activeSprite(s: VisibleSprite | null) {
-    if (s === this.#activeSprite) return;
-    if (s && s.interactable === 'disabled') return;
+    if (s === this.#activeSprite || s?.interactable === 'disabled') return;
     this.#activeSprite = s;
     this.#evtTool.emit(ESpriteManagerEvt.ActiveSpriteChange, s);
   }
