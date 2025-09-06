@@ -30,6 +30,15 @@ export class VisibleSprite extends BaseSprite {
    */
   visible = true;
 
+  /**
+   * 控制 Sprite 的交互状态
+   * - 'interactive': 可选中，可进行移动、缩放、旋转等所有交互
+   * - 'selectable': 仅可选中，但不可进行移动、缩放、旋转等交互
+   * - 'disabled': 不可选中，也不可交互
+   * @default 'interactive'
+   */
+  interactable: 'interactive' | 'selectable' | 'disabled' = 'interactive';
+
   constructor(clip: IClip) {
     super();
     this.#clip = clip;
@@ -108,6 +117,7 @@ export class VisibleSprite extends BaseSprite {
     super.copyStateTo(target);
     if (target instanceof VisibleSprite) {
       target.visible = this.visible;
+      target.interactable = this.interactable;
     }
   }
 
