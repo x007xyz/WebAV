@@ -107,59 +107,68 @@ function syncCtrlElPos(
   rectEl: HTMLElement,
   ctrlsEl: Record<TCtrlKey, HTMLElement>,
 ): void {
+  if (s.interactable === 'disabled') {
+    rectEl.style.display = 'none';
+    return;
+  }
+  rectEl.style.display = '';
+
   const cvsRatio = getCvsRatio(cvsEl);
   const { x, y, w, h, angle } = s.rect;
+
   Object.assign(rectEl.style, {
     left: `${x * cvsRatio.w}px`,
     top: `${y * cvsRatio.h}px`,
     width: `${w * cvsRatio.w}px`,
     height: `${h * cvsRatio.h}px`,
-    rotate: `${angle}rad`,
+    transform: `rotate(${angle}rad)`,
   });
-  Object.entries(getRectCtrls(cvsEl, s.rect)).forEach(([k, { x, y, w, h }]) => {
-    // ctrl 是相对中心点定位的
-    const baseStyle = {
+
+  const ctrlPosMap = getRectCtrls(cvsEl, s.rect);
+
+  for (const k in ctrlsEl) {
+    const key = k as TCtrlKey;
+    const el = ctrlsEl[key];
+    const pos = ctrlPosMap[key];
+
+    if (pos == null) {
+      el.style.display = 'none';
+      continue;
+    }
+
+    const baseStyle: Record<string, string> = {
+      width: `${pos.w * cvsRatio.w}px`,
+      height: `${pos.h * cvsRatio.h}px`,
+      transform: `translate(${pos.x * cvsRatio.w}px, ${pos.y * cvsRatio.h}px)`,
       left: '50%',
       top: '50%',
-      width: `${w * cvsRatio.w}px`,
-      height: `${h * cvsRatio.h}px`,
-      transform: `translate(${x * cvsRatio.w}px, ${y * cvsRatio.h}px)`,
     };
-    ctrlsEl[k as TCtrlKey].innerHTML = '';
-    if (k === 'rotate') {
-      Object.assign(ctrlsEl[k as TCtrlKey].style, {
-        display: s.interactable === 'interactive' ? 'block' : 'none',
-        ...baseStyle,
-      });
-    } else {
-      if (s.interactable === 'interactive') {
-        Object.assign(ctrlsEl[k as TCtrlKey].style, {
+
+    let customStyle: Record<string, string> = { display: 'none' };
+    el.innerHTML = '';
+
+    switch (s.interactable) {
+      case 'interactive':
+        customStyle = {
           display: 'block',
           backgroundColor: '#fff',
           border: '1px solid #3ee',
-          ...baseStyle,
-        });
-      } else if (s.interactable === 'selectable') {
-        Object.assign(ctrlsEl[k as TCtrlKey].style, {
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: 'transparent',
-          border: 'none',
-          ...baseStyle,
-        });
-        ctrlsEl[k as TCtrlKey].innerHTML = CloseSvg;
-      } else {
-        Object.assign(ctrlsEl[k as TCtrlKey].style, {
-          display: 'none',
-          ...baseStyle,
-        });
-      }
+        };
+        break;
+      case 'selectable':
+        if (key !== 'rotate') {
+          customStyle = {
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'transparent',
+            border: 'none',
+          };
+          el.innerHTML = CloseSvg;
+        }
+        break;
     }
-  });
-  if (s.interactable === 'disabled') {
-    rectEl.style.display = 'none';
-  } else {
-    rectEl.style.display = '';
+
+    Object.assign(el.style, baseStyle, customStyle);
   }
 }

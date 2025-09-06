@@ -300,6 +300,7 @@ function App() {
             new ImgClip((await fetch('./img/bunny.png')).body!),
           );
           await avCvs?.addSprite(spr);
+          // spr.interactable = 'interactive';
           addSprite2Track('3-img', spr, '图片');
         }}
       >
@@ -499,6 +500,7 @@ async function createFileWriter(
 }
 
 async function loadFile(
+  // @ts-ignore
   accept: Record<MIMEType, FileExtension | FileExtension[]>,
 ) {
   const [fileHandle] = await window.showOpenFilePicker({
