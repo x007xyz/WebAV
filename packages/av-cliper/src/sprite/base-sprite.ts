@@ -213,12 +213,12 @@ export function linearTimeFn(
 ): Partial<TAnimateProps> {
   const offsetTime = time - opts.delay;
   const t = offsetTime % opts.duration;
-  const process =
+  const progress =
     offsetTime / opts.duration >= opts.iterCount || offsetTime === opts.duration
       ? 1
       : t / opts.duration;
 
-  const idx = kf.findIndex((it) => it[0] >= process);
+  const idx = kf.findIndex((it) => it[0] >= progress);
   if (idx === -1) return {};
 
   const startState = kf[idx - 1];
@@ -230,7 +230,7 @@ export function linearTimeFn(
   const rs: Partial<TAnimateProps> = {};
   // 介于两个Frame状态间的进度
   const stateProcess =
-    (process - startState[0]) / (nextState[0] - startState[0]);
+    (progress - startState[0]) / (nextState[0] - startState[0]);
   for (const prop in nextFrame) {
     const p = prop as keyof TAnimateProps;
     if (startFrame[p] == null) continue;
