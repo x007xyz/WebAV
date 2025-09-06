@@ -530,7 +530,7 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: MP4ClipOpts = {}) {
   const reader = await otFile.createReader();
   await quickParseMP4File(
     reader,
-    (data) => {
+    async (data) => {
       mp4Info = data.info;
       const ftyp = data.mp4boxFile.ftyp!;
       headerBoxPos.push({ start: ftyp.start, size: ftyp.size });
@@ -545,6 +545,18 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: MP4ClipOpts = {}) {
       decoderConf.audio = ac ?? null;
       if (vc == null && ac == null) {
         Log.error('MP4Clip no video and audio track');
+      }
+      if (ac != null) {
+        const { supported } = await AudioDecoder.isConfigSupported(ac);
+        if (!supported) {
+          Log.error(`MP4Clip audio codec is not supported: ${ac.codec}`);
+        }
+      }
+      if (vc != null) {
+        const { supported } = await VideoDecoder.isConfigSupported(vc);
+        if (!supported) {
+          Log.error(`MP4Clip video codec is not supported: ${vc.codec}`);
+        }
       }
       Log.info(
         'mp4BoxFile moov ready',

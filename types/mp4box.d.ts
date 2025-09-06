@@ -168,6 +168,7 @@ declare module '@webav/mp4box.js' {
 
   interface DecoderConfigDescriptor {
     descs: [DecoderSpecificInfo] | [];
+    oti: number;
   }
   interface DecoderSpecificInfo {
     data: Uint8ArrayBuffer;

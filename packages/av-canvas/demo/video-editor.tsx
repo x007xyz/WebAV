@@ -271,7 +271,8 @@ function App() {
             clipSource === 'local'
               ? (await loadFile({ 'video/*': ['.mp4', '.mov'] })).stream()
               : (await fetch('./video/bunny_0.mp4')).body!;
-          const spr = new VisibleSprite(new MP4Clip(stream));
+          const clip = new MP4Clip(stream);
+          const spr = new VisibleSprite(clip);
           await avCvs?.addSprite(spr);
           addSprite2Track('1-video', spr, '视频');
         }}

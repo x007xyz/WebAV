@@ -50,21 +50,22 @@ export function extractFileConfig(file: MP4File, info: MP4Info) {
   const aTrack = info.audioTracks[0];
   if (aTrack != null) {
     const esdsBox = getESDSBoxFromMP4File(file);
+    const audioInfo = esdsBox == null ? {} : parseAudioInfoFromESDSBox(esdsBox);
+
     rs.audioTrackConf = {
       timescale: aTrack.timescale,
-      samplerate: aTrack.audio.sample_rate,
-      channel_count: aTrack.audio.channel_count,
+      samplerate: audioInfo.sampleRate ?? aTrack.audio.sample_rate,
+      channel_count: audioInfo.numberOfChannels ?? aTrack.audio.channel_count,
       hdlr: 'soun',
       type: aTrack.codec.startsWith('mp4a') ? 'mp4a' : aTrack.codec,
-      description: getESDSBoxFromMP4File(file),
+      description: esdsBox,
     };
+
     rs.audioDecoderConf = {
-      codec: aTrack.codec.startsWith('mp4a')
-        ? DEFAULT_AUDIO_CONF.codec
-        : aTrack.codec,
-      numberOfChannels: aTrack.audio.channel_count,
-      sampleRate: aTrack.audio.sample_rate,
-      ...(esdsBox == null ? {} : parseAudioInfo4ESDSBox(esdsBox)),
+      codec: audioInfo.codec ?? DEFAULT_AUDIO_CONF.codec,
+      numberOfChannels:
+        audioInfo.numberOfChannels ?? aTrack.audio.channel_count,
+      sampleRate: audioInfo.sampleRate ?? aTrack.audio.sample_rate,
     };
   }
   return rs;
@@ -97,12 +98,25 @@ function getESDSBoxFromMP4File(file: MP4File, codec = 'mp4a') {
   return mp4aBox?.esds;
 }
 
-// 解决封装层音频信息标识错误，导致解码异常
-function parseAudioInfo4ESDSBox(esds: ESDSBoxParser) {
-  const decoderConf = esds.esd.descs[0]?.descs[0];
-  if (decoderConf == null) return {};
+// 从 ESDS Box 中解析出音频配置信息，解决封装层音频信息标识错误，导致解码异常
+function parseAudioInfoFromESDSBox(esds: ESDSBoxParser): {
+  codec?: string;
+  sampleRate?: number;
+  numberOfChannels?: number;
+} {
+  let codec = 'mp4a';
+  const decConfDesc = esds.esd.descs[0];
+  if (decConfDesc == null) return {};
+  codec += '.' + decConfDesc.oti.toString(16);
 
-  const [byte1, byte2] = decoderConf.data;
+  const decSpecInfo = decConfDesc.descs[0];
+  if (decSpecInfo == null) return { codec };
+
+  // ref: https://wiki.multimedia.cx/index.php/MPEG-4_Audio#Audio_Specific_Config
+  const audioObjectType = (decSpecInfo.data[0] & 0xf8) >> 3;
+  codec += '.' + audioObjectType;
+
+  const [byte1, byte2] = decSpecInfo.data;
   // sampleRate 是第一字节后 3bit + 第二字节前 1bit
   const sampleRateIdx = ((byte1 & 0x07) << 1) + (byte2 >> 7);
   // numberOfChannels 是第二字节 [2, 5] 4bit
@@ -111,7 +125,9 @@ function parseAudioInfo4ESDSBox(esds: ESDSBoxParser) {
     96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025,
     8000, 7350,
   ] as const;
+
   return {
+    codec,
     sampleRate: sampleRateEnum[sampleRateIdx],
     numberOfChannels,
   };
