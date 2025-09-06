@@ -1,5 +1,11 @@
 # @webav/internal-utils
 
+## 1.2.0
+
+### Minor Changes
+
+- 5bb3a47: feat: support interactable for VisibleSprite #456
+
 ## 1.1.17
 
 ## 1.1.16
