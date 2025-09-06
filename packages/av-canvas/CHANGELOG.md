@@ -1,5 +1,14 @@
 # @webav/av-canvas
 
+## 1.2.1
+
+### Patch Changes
+
+- 59eb489: fix: parse audio codec incorrect #396
+- Updated dependencies [59eb489]
+  - @webav/av-cliper@1.2.1
+  - @webav/internal-utils@1.2.1
+
 ## 1.2.0
 
 ### Minor Changes
