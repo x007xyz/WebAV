@@ -25,7 +25,7 @@ interface MP4DecoderConf {
   audio: AudioDecoderConfig | null;
 }
 
-interface MP4ClipOpts {
+export interface IMP4ClipOpts {
   audio?: boolean | { volume: number };
   /**
    * 不安全，随时可能废弃
@@ -120,11 +120,11 @@ export class MP4Clip implements IClip {
     audio: null,
   };
 
-  #opts: MP4ClipOpts = { audio: true };
+  #opts: IMP4ClipOpts = { audio: true };
 
   constructor(
     source: OPFSToolFile | ReadableStream<Uint8Array> | MPClipCloneArgs,
-    opts: MP4ClipOpts = {},
+    opts: IMP4ClipOpts = {},
   ) {
     if (
       !(source instanceof ReadableStream) &&
@@ -518,7 +518,7 @@ function genDecoder(
   };
 }
 
-async function mp4FileToSamples(otFile: OPFSToolFile, opts: MP4ClipOpts = {}) {
+async function mp4FileToSamples(otFile: OPFSToolFile, opts: IMP4ClipOpts = {}) {
   let mp4Info: MP4Info | null = null;
   const decoderConf: MP4DecoderConf = { video: null, audio: null };
   let videoSamples: ExtMP4Sample[] = [];

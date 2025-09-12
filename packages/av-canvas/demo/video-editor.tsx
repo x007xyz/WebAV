@@ -273,6 +273,7 @@ function App() {
               : (await fetch('./video/bunny_0.mp4')).body!;
           const clip = new MP4Clip(stream);
           const spr = new VisibleSprite(clip);
+          // spr.rect.fixedAspectRatio = true;
           await avCvs?.addSprite(spr);
           addSprite2Track('1-video', spr, '视频');
         }}
