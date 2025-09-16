@@ -1,6 +1,6 @@
 {
   "name": "@webav/internal-utils",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "private": false,
   "repository": "https://github.com/WebAV-Tech/WebAV",
   "type": "module",
