@@ -233,7 +233,7 @@ export function createVFRotater(
   const ctx = canvas.getContext('2d')!;
 
   ctx.translate(rotatedWidth / 2, rotatedHeight / 2);
-  ctx.rotate((normalizedRotation * Math.PI) / 180);
+  ctx.rotate((-normalizedRotation * Math.PI) / 180);
   ctx.translate(-width / 2, -height / 2);
 
   return (vf: VideoFrame | null) => {
@@ -242,7 +242,7 @@ export function createVFRotater(
     ctx.drawImage(vf, 0, 0);
     const newVF = new VideoFrame(canvas, {
       timestamp: vf.timestamp,
-      duration: vf.duration ?? 0,
+      duration: vf.duration ?? undefined,
     });
     vf.close();
     return newVF;
