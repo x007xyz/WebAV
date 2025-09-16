@@ -1,5 +1,12 @@
 # @webav/av-cliper
 
+## 1.2.2
+
+### Patch Changes
+
+- 2d4eec1: fix: MP4Clip has not adapted to the video track’s matrix settings
+  - @webav/internal-utils@1.2.2
+
 ## 1.2.1
 
 ### Patch Changes
