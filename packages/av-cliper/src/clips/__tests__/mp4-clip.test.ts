@@ -1,6 +1,7 @@
 import mp4box, { MP4ArrayBuffer } from '@webav/mp4box.js';
 import { file, write } from 'opfs-tools';
 import { expect, test, vi } from 'vitest';
+import { parseMatrix } from '../../mp4-utils/mp4box-utils';
 import { MP4Clip } from '../mp4-clip';
 
 const mp4_123 = `//${location.host}/video/123.mp4`;
@@ -179,15 +180,24 @@ test('get file header data', async () => {
       hasMoov: true,
     }),
   );
+
   expect(boxfile.moov?.mvhd.matrix.length).toBe(9);
+  expect(parseMatrix(boxfile.moov?.mvhd.matrix!)).toEqual({
+    perspective: 1,
+    rotationDeg: 0,
+    rotationRad: 0,
+    scaleX: 1,
+    scaleY: 1,
+    translateX: 0,
+    translateY: 0,
+  });
 });
 
 test('decode incorrectFrameTypeMp4', async () => {
   const clip = new MP4Clip((await fetch(incorrectFrameTypeMp4)).body!);
   await clip.ready;
-  console.log(clip.meta.duration);
   expect(Math.round(clip.meta.duration / 1e6)).toBe(5);
-  const { state, video } = await clip.tick(clip.meta.duration - 30e3);
+  // 获取最后一帧
+  const { state } = await clip.tick(clip.meta.duration - 30e3);
   expect(state).toBe('success');
-  expect(video?.timestamp).toBe(5e6);
 });

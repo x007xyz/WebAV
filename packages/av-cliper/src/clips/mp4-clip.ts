@@ -4,6 +4,7 @@ import { file, tmpfile, write } from 'opfs-tools';
 import { audioResample, extractPCM4AudioData, sleep } from '../av-utils';
 import {
   extractFileConfig,
+  parseMatrix,
   quickParseMP4File,
 } from '../mp4-utils/mp4box-utils';
 import { DEFAULT_AUDIO_CONF, IClip } from './iclip';
@@ -85,6 +86,7 @@ export class MP4Clip implements IClip {
 
   #localFile: OPFSToolFile;
 
+  /** 存储视频头（box: ftyp, moov）的二进制数据 */
   #headerBoxPos: Array<{ start: number; size: number }> = [];
   /**
    * 提供视频头（box: ftyp, moov）的二进制数据
@@ -102,6 +104,17 @@ export class MP4Clip implements IClip {
       ),
     ).arrayBuffer();
   }
+
+  /**存储视频平移旋转信息，目前只还原旋转 */
+  #parsedMatrix = {
+    perspective: 1,
+    rotationDeg: 0,
+    rotationRad: 0,
+    scaleX: 1,
+    scaleY: 1,
+    translateX: 0,
+    translateY: 0,
+  };
 
   #volume = 1;
 
@@ -160,11 +173,18 @@ export class MP4Clip implements IClip {
           ? mp4FileToSamples(source, this.#opts)
           : Promise.resolve(source)
     ).then(
-      async ({ videoSamples, audioSamples, decoderConf, headerBoxPos }) => {
+      async ({
+        videoSamples,
+        audioSamples,
+        decoderConf,
+        headerBoxPos,
+        parsedMatrix,
+      }) => {
         this.#videoSamples = videoSamples;
         this.#audioSamples = audioSamples;
         this.#decoderConf = decoderConf;
         this.#headerBoxPos = headerBoxPos;
+        this.#parsedMatrix = parsedMatrix;
 
         const { videoFrameFinder, audioFrameFinder } = genDecoder(
           {
@@ -355,6 +375,7 @@ export class MP4Clip implements IClip {
         audioSamples: preAudioSlice ?? [],
         decoderConf: this.#decoderConf,
         headerBoxPos: this.#headerBoxPos,
+        parsedMatrix: this.#parsedMatrix,
       },
       this.#opts,
     );
@@ -365,6 +386,7 @@ export class MP4Clip implements IClip {
         audioSamples: postAudioSlice ?? [],
         decoderConf: this.#decoderConf,
         headerBoxPos: this.#headerBoxPos,
+        parsedMatrix: this.#parsedMatrix,
       },
       this.#opts,
     );
@@ -382,6 +404,7 @@ export class MP4Clip implements IClip {
         audioSamples: [...this.#audioSamples],
         decoderConf: this.#decoderConf,
         headerBoxPos: this.#headerBoxPos,
+        parsedMatrix: this.#parsedMatrix,
       },
       this.#opts,
     );
@@ -408,6 +431,7 @@ export class MP4Clip implements IClip {
             audio: null,
           },
           headerBoxPos: this.#headerBoxPos,
+          parsedMatrix: this.#parsedMatrix,
         },
         this.#opts,
       );
@@ -426,6 +450,7 @@ export class MP4Clip implements IClip {
             video: null,
           },
           headerBoxPos: this.#headerBoxPos,
+          parsedMatrix: this.#parsedMatrix,
         },
         this.#opts,
       );
@@ -524,6 +549,15 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: IMP4ClipOpts = {}) {
   let videoSamples: ExtMP4Sample[] = [];
   let audioSamples: ExtMP4Sample[] = [];
   let headerBoxPos: Array<{ start: number; size: number }> = [];
+  const parsedMatrix = {
+    perspective: 1,
+    rotationDeg: 0,
+    rotationRad: 0,
+    scaleX: 1,
+    scaleY: 1,
+    translateX: 0,
+    translateY: 0,
+  };
 
   let videoDeltaTS = -1;
   let audioDeltaTS = -1;
@@ -536,6 +570,8 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: IMP4ClipOpts = {}) {
       headerBoxPos.push({ start: ftyp.start, size: ftyp.size });
       const moov = data.mp4boxFile.moov!;
       headerBoxPos.push({ start: moov.start, size: moov.size });
+
+      Object.assign(parsedMatrix, parseMatrix(moov.mvhd.matrix));
 
       let { videoDecoderConf: vc, audioDecoderConf: ac } = extractFileConfig(
         data.mp4boxFile,
@@ -599,6 +635,7 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: IMP4ClipOpts = {}) {
     audioSamples,
     decoderConf,
     headerBoxPos,
+    parsedMatrix,
   };
 }
 

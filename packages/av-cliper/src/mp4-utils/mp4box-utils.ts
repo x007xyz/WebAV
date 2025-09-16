@@ -179,3 +179,36 @@ export async function quickParseMP4File(
     mp4boxFile.stop();
   }
 }
+
+export function parseMatrix(matrix: Uint32Array) {
+  if (matrix.length !== 9) {
+    throw new Error('Matrix must have 9 elements');
+  }
+
+  // 提取并转成浮点数
+  const a = matrix[0] / 65536.0;
+  const b = matrix[1] / 65536.0;
+  const c = matrix[3] / 65536.0;
+  const d = matrix[4] / 65536.0;
+  const tx = matrix[6] / 65536.0; // 一般是 0
+  const ty = matrix[7] / 65536.0; // 一般是 0
+  const w = matrix[8] / (1 << 30); // 一般是 1
+
+  // 缩放
+  const scaleX = Math.sqrt(a * a + c * c);
+  const scaleY = Math.sqrt(b * b + d * d);
+
+  // 旋转角度（弧度）
+  const rotationRad = Math.atan2(c, a);
+  const rotationDeg = (rotationRad * 180) / Math.PI;
+
+  return {
+    scaleX,
+    scaleY,
+    rotationRad,
+    rotationDeg,
+    translateX: tx,
+    translateY: ty,
+    perspective: w,
+  };
+}
