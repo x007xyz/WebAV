@@ -18,6 +18,7 @@ declare module '@webav/mp4box.js' {
   }
 
   export interface MP4VideoTrack extends MP4MediaTrack {
+    matrix: Int32Array;
     video: {
       width: number;
       height: number;

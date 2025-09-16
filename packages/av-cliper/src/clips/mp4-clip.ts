@@ -3,7 +3,9 @@ import { MP4Info, MP4Sample } from '@webav/mp4box.js';
 import { file, tmpfile, write } from 'opfs-tools';
 import { audioResample, extractPCM4AudioData, sleep } from '../av-utils';
 import {
+  createVFRotater,
   extractFileConfig,
+  parseMatrix,
   quickParseMP4File,
 } from '../mp4-utils/mp4box-utils';
 import { DEFAULT_AUDIO_CONF, IClip } from './iclip';
@@ -85,6 +87,7 @@ export class MP4Clip implements IClip {
 
   #localFile: OPFSToolFile;
 
+  /** 存储视频头（box: ftyp, moov）的二进制数据 */
   #headerBoxPos: Array<{ start: number; size: number }> = [];
   /**
    * 提供视频头（box: ftyp, moov）的二进制数据
@@ -102,6 +105,18 @@ export class MP4Clip implements IClip {
       ),
     ).arrayBuffer();
   }
+
+  /**存储视频平移旋转信息，目前只还原旋转 */
+  #parsedMatrix = {
+    perspective: 1,
+    rotationRad: 0,
+    rotationDeg: 0,
+    scaleX: 1,
+    scaleY: 1,
+    translateX: 0,
+    translateY: 0,
+  };
+  #vfRotater: (vf: VideoFrame | null) => VideoFrame | null = (vf) => vf;
 
   #volume = 1;
 
@@ -160,11 +175,18 @@ export class MP4Clip implements IClip {
           ? mp4FileToSamples(source, this.#opts)
           : Promise.resolve(source)
     ).then(
-      async ({ videoSamples, audioSamples, decoderConf, headerBoxPos }) => {
+      async ({
+        videoSamples,
+        audioSamples,
+        decoderConf,
+        headerBoxPos,
+        parsedMatrix,
+      }) => {
         this.#videoSamples = videoSamples;
         this.#audioSamples = audioSamples;
         this.#decoderConf = decoderConf;
         this.#headerBoxPos = headerBoxPos;
+        this.#parsedMatrix = parsedMatrix;
 
         const { videoFrameFinder, audioFrameFinder } = genDecoder(
           {
@@ -186,7 +208,22 @@ export class MP4Clip implements IClip {
         this.#videoFrameFinder = videoFrameFinder;
         this.#audioFrameFinder = audioFrameFinder;
 
-        this.#meta = genMeta(decoderConf, videoSamples, audioSamples);
+        const { codedWidth, codedHeight } = decoderConf.video ?? {};
+        if (codedWidth && codedHeight) {
+          this.#vfRotater = createVFRotater(
+            codedWidth,
+            codedHeight,
+            parsedMatrix.rotationDeg,
+          );
+        }
+
+        this.#meta = genMeta(
+          decoderConf,
+          videoSamples,
+          audioSamples,
+          parsedMatrix.rotationDeg,
+        );
+
         this.#log.info('MP4Clip meta:', this.#meta);
         return { ...this.#meta };
       },
@@ -223,7 +260,7 @@ export class MP4Clip implements IClip {
 
     const [audio, video] = await Promise.all([
       this.#audioFrameFinder?.find(time) ?? [],
-      this.#videoFrameFinder?.find(time),
+      this.#videoFrameFinder?.find(time).then(this.#vfRotater),
     ]);
 
     if (video == null) {
@@ -355,6 +392,7 @@ export class MP4Clip implements IClip {
         audioSamples: preAudioSlice ?? [],
         decoderConf: this.#decoderConf,
         headerBoxPos: this.#headerBoxPos,
+        parsedMatrix: this.#parsedMatrix,
       },
       this.#opts,
     );
@@ -365,6 +403,7 @@ export class MP4Clip implements IClip {
         audioSamples: postAudioSlice ?? [],
         decoderConf: this.#decoderConf,
         headerBoxPos: this.#headerBoxPos,
+        parsedMatrix: this.#parsedMatrix,
       },
       this.#opts,
     );
@@ -382,6 +421,7 @@ export class MP4Clip implements IClip {
         audioSamples: [...this.#audioSamples],
         decoderConf: this.#decoderConf,
         headerBoxPos: this.#headerBoxPos,
+        parsedMatrix: this.#parsedMatrix,
       },
       this.#opts,
     );
@@ -408,6 +448,7 @@ export class MP4Clip implements IClip {
             audio: null,
           },
           headerBoxPos: this.#headerBoxPos,
+          parsedMatrix: this.#parsedMatrix,
         },
         this.#opts,
       );
@@ -426,6 +467,7 @@ export class MP4Clip implements IClip {
             video: null,
           },
           headerBoxPos: this.#headerBoxPos,
+          parsedMatrix: this.#parsedMatrix,
         },
         this.#opts,
       );
@@ -451,6 +493,7 @@ function genMeta(
   decoderConf: MP4DecoderConf,
   videoSamples: ExtMP4Sample[],
   audioSamples: ExtMP4Sample[],
+  rotationDeg: number,
 ) {
   const meta = {
     duration: 0,
@@ -462,6 +505,11 @@ function genMeta(
   if (decoderConf.video != null && videoSamples.length > 0) {
     meta.width = decoderConf.video.codedWidth ?? 0;
     meta.height = decoderConf.video.codedHeight ?? 0;
+    // 90, 270 度，需要交换宽高
+    const normalizedRotation = (Math.round(rotationDeg / 90) * 90 + 360) % 360;
+    if (normalizedRotation === 90 || normalizedRotation === 270) {
+      [meta.width, meta.height] = [meta.height, meta.width];
+    }
   }
   if (decoderConf.audio != null && audioSamples.length > 0) {
     meta.audioSampleRate = DEFAULT_AUDIO_CONF.sampleRate;
@@ -524,6 +572,15 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: IMP4ClipOpts = {}) {
   let videoSamples: ExtMP4Sample[] = [];
   let audioSamples: ExtMP4Sample[] = [];
   let headerBoxPos: Array<{ start: number; size: number }> = [];
+  const parsedMatrix = {
+    perspective: 1,
+    rotationRad: 0,
+    rotationDeg: 0,
+    scaleX: 1,
+    scaleY: 1,
+    translateX: 0,
+    translateY: 0,
+  };
 
   let videoDeltaTS = -1;
   let audioDeltaTS = -1;
@@ -536,6 +593,8 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: IMP4ClipOpts = {}) {
       headerBoxPos.push({ start: ftyp.start, size: ftyp.size });
       const moov = data.mp4boxFile.moov!;
       headerBoxPos.push({ start: moov.start, size: moov.size });
+
+      Object.assign(parsedMatrix, parseMatrix(mp4Info.videoTracks[0]?.matrix));
 
       let { videoDecoderConf: vc, audioDecoderConf: ac } = extractFileConfig(
         data.mp4boxFile,
@@ -599,6 +658,7 @@ async function mp4FileToSamples(otFile: OPFSToolFile, opts: IMP4ClipOpts = {}) {
     audioSamples,
     decoderConf,
     headerBoxPos,
+    parsedMatrix,
   };
 }
 
@@ -1524,5 +1584,37 @@ if (import.meta.vitest) {
     expect(normalized.offset).toBe(48);
     expect(normalized.size).toBe(1000);
     expect(normalized.is_sync).toBe(normalized.is_idr);
+  });
+
+  it('genMeta adjusts width and height based on rotation', () => {
+    const meta = genMeta(
+      {
+        video: {
+          codedWidth: 1920,
+          codedHeight: 1080,
+        },
+        audio: null,
+      } as any,
+      [{ cts: 0, duration: 1000 }] as any,
+      [],
+      90,
+    );
+    expect(meta.width).toBe(1080);
+    expect(meta.height).toBe(1920);
+
+    const meta2 = genMeta(
+      {
+        video: {
+          codedWidth: 1920,
+          codedHeight: 1080,
+        },
+        audio: null,
+      } as any,
+      [{ cts: 0, duration: 1000 }] as any,
+      [],
+      180,
+    );
+    expect(meta2.width).toBe(1920);
+    expect(meta2.height).toBe(1080);
   });
 }

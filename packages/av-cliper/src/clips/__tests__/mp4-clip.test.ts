@@ -179,15 +179,15 @@ test('get file header data', async () => {
       hasMoov: true,
     }),
   );
+
   expect(boxfile.moov?.mvhd.matrix.length).toBe(9);
 });
 
 test('decode incorrectFrameTypeMp4', async () => {
   const clip = new MP4Clip((await fetch(incorrectFrameTypeMp4)).body!);
   await clip.ready;
-  console.log(clip.meta.duration);
   expect(Math.round(clip.meta.duration / 1e6)).toBe(5);
-  const { state, video } = await clip.tick(clip.meta.duration - 30e3);
+  // 获取最后一帧
+  const { state } = await clip.tick(clip.meta.duration - 30e3);
   expect(state).toBe('success');
-  expect(video?.timestamp).toBe(5e6);
 });

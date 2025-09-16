@@ -179,3 +179,72 @@ export async function quickParseMP4File(
     mp4boxFile.stop();
   }
 }
+
+export function parseMatrix(matrix?: Int32Array) {
+  if (matrix?.length !== 9) return {};
+
+  const signedMatrix = new Int32Array(matrix.buffer);
+
+  // 提取并转成浮点数
+  const a = signedMatrix[0] / 65536.0;
+  const b = signedMatrix[1] / 65536.0;
+  const c = signedMatrix[3] / 65536.0;
+  const d = signedMatrix[4] / 65536.0;
+  const tx = signedMatrix[6] / 65536.0; // 一般是 0
+  const ty = signedMatrix[7] / 65536.0; // 一般是 0
+  const w = signedMatrix[8] / (1 << 30); // 一般是 1
+
+  // 缩放
+  const scaleX = Math.sqrt(a * a + c * c);
+  const scaleY = Math.sqrt(b * b + d * d);
+
+  // 旋转角度（弧度）
+  const rotationRad = Math.atan2(c, a);
+  const rotationDeg = (rotationRad * 180) / Math.PI;
+
+  return {
+    scaleX,
+    scaleY,
+    rotationRad,
+    rotationDeg,
+    translateX: tx,
+    translateY: ty,
+    perspective: w,
+  };
+}
+
+/**
+ * 旋转 VideoFrame
+ */
+export function createVFRotater(
+  width: number,
+  height: number,
+  rotationDeg: number,
+) {
+  const normalizedRotation = (Math.round(rotationDeg / 90) * 90 + 360) % 360;
+  if (normalizedRotation === 0) return (vf: VideoFrame | null) => vf;
+
+  const rotatedWidth =
+    normalizedRotation === 90 || normalizedRotation === 270 ? height : width;
+  const rotatedHeight =
+    normalizedRotation === 90 || normalizedRotation === 270 ? width : height;
+
+  const canvas = new OffscreenCanvas(rotatedWidth, rotatedHeight);
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.translate(rotatedWidth / 2, rotatedHeight / 2);
+  ctx.rotate((normalizedRotation * Math.PI) / 180);
+  ctx.translate(-width / 2, -height / 2);
+
+  return (vf: VideoFrame | null) => {
+    if (vf == null) return null;
+
+    ctx.drawImage(vf, 0, 0);
+    const newVF = new VideoFrame(canvas, {
+      timestamp: vf.timestamp,
+      duration: vf.duration ?? 0,
+    });
+    vf.close();
+    return newVF;
+  };
+}
