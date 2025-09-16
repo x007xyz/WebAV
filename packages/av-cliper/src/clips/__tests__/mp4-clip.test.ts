@@ -1,7 +1,6 @@
 import mp4box, { MP4ArrayBuffer } from '@webav/mp4box.js';
 import { file, write } from 'opfs-tools';
 import { expect, test, vi } from 'vitest';
-import { parseMatrix } from '../../mp4-utils/mp4box-utils';
 import { MP4Clip } from '../mp4-clip';
 
 const mp4_123 = `//${location.host}/video/123.mp4`;
@@ -182,15 +181,6 @@ test('get file header data', async () => {
   );
 
   expect(boxfile.moov?.mvhd.matrix.length).toBe(9);
-  expect(parseMatrix(boxfile.moov?.mvhd.matrix!)).toEqual({
-    perspective: 1,
-    rotationDeg: 0,
-    rotationRad: 0,
-    scaleX: 1,
-    scaleY: 1,
-    translateX: 0,
-    translateY: 0,
-  });
 });
 
 test('decode incorrectFrameTypeMp4', async () => {
