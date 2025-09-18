@@ -136,13 +136,72 @@ export class EmbedSubtitlesClip implements IClip {
     this.ready = Promise.resolve(this.meta);
   }
 
+  #wrapText(text: string, maxWidth: number): string[] {
+    const lines: string[] = [];
+    let currentLine = '';
+
+    // 检测是否包含中文字符
+    const hasChinese = /[\u4e00-\u9fff]/.test(text);
+
+    if (hasChinese) {
+      // 中英混合文本：优先在标点符号和英文单词边界换行
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const testLine = currentLine + char;
+        const metrics = this.#ctx.measureText(testLine);
+
+        if (metrics.width <= maxWidth) {
+          currentLine = testLine;
+        } else {
+          if (currentLine) {
+            lines.push(currentLine);
+            currentLine = char;
+          } else {
+            // 单个字符就超宽，强制换行
+            lines.push(char);
+            currentLine = '';
+          }
+        }
+      }
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+    } else {
+      // 纯英文按单词换行
+      const words = text.split(' ');
+
+      for (const word of words) {
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        const metrics = this.#ctx.measureText(testLine);
+
+        if (metrics.width <= maxWidth) {
+          currentLine = testLine;
+        } else {
+          if (currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+          } else {
+            lines.push(word);
+          }
+        }
+      }
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+    }
+
+    return lines;
+  }
+
   #renderTxt(txt: string) {
+    const { width, height } = this.#cvs;
+    const maxTextWidth = width * 0.9; // 留出10%的边距
+
     const lines = txt
       .split('\n')
-      .reverse()
-      .map((t) => t.trim());
-
-    const { width, height } = this.#cvs;
+      .flatMap((line) => this.#wrapText(line.trim(), maxTextWidth))
+      .reverse();
 
     const {
       color,
